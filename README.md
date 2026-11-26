@@ -23,15 +23,39 @@ npm run dev
 npm run build
 npm run preview
 
-# Run the 100% verified test suite (348 tests across 18 suites):
+# Run the 100% verified test suite (389 tests across 19 suites):
 npx tsx test-suite.mjs
 ```
 
 ---
 
-## 📡 Current IPTV Provider Integrations
+## 📡 Universal IPTV Provider Integrations (Existing Infrastructure)
 
-WHY TV supports the three standard methods used by IPTV providers today:
+WHY TV operates as a centralized entertainment platform connecting directly to existing, authorized IPTV infrastructure and upstream streaming servers without self-hosting television broadcasts:
+
+### 1. B2B FAST Content Syndication & Cloud Playout
+- **Amagi CLOUDPORT & THUNDERSTORM**: Connects to Amagi-distributed linear HLS/DASH feeds with SCTE-35 ad signaling and XMLTV guides.
+- **Wurl Global ContentDelivery Network**: SSAI-enabled FAST channels syndicated across smart TV platforms with automated EPG ingest.
+- **Frequency Studio Broadcast Cloud**: Enterprise linear TV channel creator with multi-CDN edge delivery (Akamai/Cloudflare).
+
+### 2. Canadian Licensed BDUs & White-Label Resellers
+- **VMedia & RiverTV White-Label**: Access to VMedia's CRTC-licensed BDU bouquet via authorized B2B white-label reseller integration, HLS streams, and 7-day VCloud catch-up.
+- **TekSavvy TV Connector**: Independent Canadian BDU subscriber connector over managed broadband infrastructure.
+- **Bell Fibe TV Everywhere**: Authorized TV Everywhere portal federation for subscribed customers.
+- **Rogers Xfinity Cloud IPTV**: Comcast X1-based cloud streaming portal federation for subscribed customers.
+
+### 3. Consumer FAST Platforms
+- **Pluto TV North America**: Direct regional FAST linear HLS streams and real-time electronic programming timelines from `*.pluto.tv`.
+
+### 4. Direct-to-Consumer (D2C) Sports Stream Connectors
+- **DAZN Live Sports Pass**: Multi-CDN sports feeds for authorized accounts covering NFL, UEFA Champions League, and Combat Sports.
+- **Sportsnet+ Regional Sports**: Authorized subscriber feeds covering NHL Hockey, Toronto Blue Jays baseball, and NBA Basketball.
+
+### 5. IPTV Middleware & Player Applications
+- **TiviMate Universal XC Gateway**: Armobsoft-compatible XC API v2 connector supporting multi-server profiles.
+- **IPTV Smarters Pro White-Label Gateway**: WHMCS Smarters middleware integration with category partitioning and account expiration tracking.
+
+---
 
 ### 1. Xtream Codes (XC) API Integration
 - **Direct Login**: Connect using your provider's **Server URL**, **Username**, and **Password**.

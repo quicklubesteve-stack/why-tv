@@ -15,6 +15,7 @@ import {
   ParentalControlsConfig,
   VodItem,
   VodEpisode,
+  ProviderConnection,
 } from './types';
 import { StorageService } from './services/storageService';
 import { parseM3U } from './utils/m3uParser';
@@ -38,6 +39,7 @@ import { SportsCompanionBar } from './components/SportsCompanionBar';
 import { PvrRecordingsModal } from './components/PvrRecordingsModal';
 import { ParentalLockModal } from './components/ParentalLockModal';
 import { QuickSearchModal } from './components/QuickSearchModal';
+import { ProviderHubModal } from './components/ProviderHubModal';
 import { fetchXtreamLiveChannels } from './utils/xtreamClient';
 import {
   createRecordingFromProgram,
@@ -45,6 +47,12 @@ import {
   updateRecordingsLifecycle,
 } from './utils/pvrUtils';
 import { getNextEpisode } from './utils/vodUtils';
+import {
+  getStoredProviders,
+  saveStoredProviders,
+  importProviderChannels,
+  disconnectProviderChannels,
+} from './utils/providerManager';
 
 export const App: React.FC = () => {
   // Global State
@@ -111,6 +119,59 @@ export const App: React.FC = () => {
   const [isXtreamModalOpen, setIsXtreamModalOpen] = useState<boolean>(false);
   const [isSportsBarOpen, setIsSportsBarOpen] = useState<boolean>(false);
   const [isQuickSearchOpen, setIsQuickSearchOpen] = useState<boolean>(false);
+  const [isProviderModalOpen, setIsProviderModalOpen] = useState<boolean>(false);
+
+  // Existing Provider Integrations State (Amagi, Wurl, VMedia, TekSavvy, Pluto TV, etc.)
+  const [providers, setProviders] = useState<ProviderConnection[]>(() => getStoredProviders());
+
+  const handleToggleProvider = (providerId: string) => {
+    const currentProvider = providers.find((p) => p.id === providerId);
+    const willDisconnect = currentProvider?.status === 'connected';
+
+    setProviders((prev) => {
+      const updated = prev.map((p) => {
+        if (p.id === providerId) {
+          const nextStatus = willDisconnect ? 'disconnected' : 'connected';
+          return { ...p, status: nextStatus as 'connected' | 'disconnected' };
+        }
+        return p;
+      });
+      saveStoredProviders(updated);
+      return updated;
+    });
+
+    if (willDisconnect) {
+      setChannels((prev) => disconnectProviderChannels(providerId, prev));
+    } else {
+      setChannels((prev) => {
+        const { updatedChannels } = importProviderChannels(providerId, prev);
+        return updatedChannels;
+      });
+    }
+  };
+
+  const handleUpdateProviderCredentials = (providerId: string, credentials: any) => {
+    setProviders((prev) => {
+      const updated = prev.map((p) => {
+        if (p.id === providerId) {
+          return {
+            ...p,
+            credentials: { ...p.credentials, ...credentials },
+            status: 'connected' as const,
+          };
+        }
+        return p;
+      });
+      saveStoredProviders(updated);
+      return updated;
+    });
+
+    // Auto import channels upon authenticating credentials
+    setChannels((prev) => {
+      const { updatedChannels } = importProviderChannels(providerId, prev);
+      return updatedChannels;
+    });
+  };
 
   // Dialing buffer for physical remote keys (0-9)
   const [dialedNumber, setDialedNumber] = useState<string>('');
@@ -726,6 +787,7 @@ export const App: React.FC = () => {
         onOpenSportsBar={() => setIsSportsBarOpen(true)}
         onOpenPvrModal={() => setIsPvrModalOpen(true)}
         onOpenQuickSearch={() => setIsQuickSearchOpen(true)}
+        onOpenProviderHub={() => setIsProviderModalOpen(true)}
         activeRecordingsCount={recordings.filter((r) => r.status === 'recording').length}
       />
 
@@ -963,6 +1025,7 @@ export const App: React.FC = () => {
             onConnectPreset={handleConnectPreset}
             corsProxyEnabled={corsProxyEnabled}
             onToggleCorsProxy={() => setCorsProxyEnabled(!corsProxyEnabled)}
+            onOpenProviderHub={() => setIsProviderModalOpen(true)}
           />
         )}
       </main>
@@ -1039,6 +1102,16 @@ export const App: React.FC = () => {
         epgPrograms={epgPrograms}
         onSelectChannel={handleSelectChannel}
         timeZone={timeZone}
+      />
+
+      {/* Existing IPTV Providers & Infrastructure Integration Modal */}
+      <ProviderHubModal
+        isOpen={isProviderModalOpen}
+        onClose={() => setIsProviderModalOpen(false)}
+        providers={providers}
+        onToggleProvider={handleToggleProvider}
+        onUpdateProviderCredentials={handleUpdateProviderCredentials}
+        allChannels={channels}
       />
 
       {/* Cable Box Footer / Status Bar */}

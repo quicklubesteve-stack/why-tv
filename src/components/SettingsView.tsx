@@ -50,6 +50,7 @@ interface SettingsViewProps {
   onConnectPreset: (preset: PresetProvider) => Promise<void>;
   corsProxyEnabled: boolean;
   onToggleCorsProxy: () => void;
+  onOpenProviderHub?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -73,6 +74,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onConnectPreset,
   corsProxyEnabled,
   onToggleCorsProxy,
+  onOpenProviderHub,
 }) => {
   // M3U Add states
   const [m3uName, setM3uName] = useState<string>('');
@@ -283,7 +285,58 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </section>
 
-      {/* 2. Xtream Codes Provider Connection */}
+      {/* 2. Universal Authorized IPTV Provider Integrations */}
+      {onOpenProviderHub && (
+        <section className="bg-gradient-to-r from-cable-900 via-cable-900 to-emerald-950/40 border border-emerald-500/50 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-cable-border pb-4">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-400 text-neutral-950 flex items-center justify-center font-bold">
+                <Server className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-lg font-bold text-white">Authorized IPTV Provider Connections</h3>
+                  <span className="text-[10px] font-mono bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800 font-bold">
+                    12 INFRASTRUCTURES
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300">
+                  Integrate existing B2B FAST syndicators (Amagi, Wurl), Canadian BDUs (VMedia, TekSavvy), and live sports.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onOpenProviderHub}
+              className="flex items-center space-x-2 px-4 py-2 bg-emerald-400 hover:bg-emerald-300 text-neutral-950 font-bold rounded-xl text-xs shadow-lg cable-focus-ring shrink-0"
+            >
+              <Zap className="w-4 h-4" />
+              <span>Open Provider Hub</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+            <div className="bg-cable-950/80 p-3 rounded-lg border border-cable-border/70">
+              <span className="text-[10px] uppercase font-mono text-slate-400 block">Amagi & Wurl</span>
+              <span className="text-amber-300 font-bold">FAST Syndication</span>
+            </div>
+            <div className="bg-cable-950/80 p-3 rounded-lg border border-cable-border/70">
+              <span className="text-[10px] uppercase font-mono text-slate-400 block">VMedia & RiverTV</span>
+              <span className="text-emerald-300 font-bold">White-Label BDU</span>
+            </div>
+            <div className="bg-cable-950/80 p-3 rounded-lg border border-cable-border/70">
+              <span className="text-[10px] uppercase font-mono text-slate-400 block">TekSavvy TV</span>
+              <span className="text-sky-300 font-bold">Independent BDU</span>
+            </div>
+            <div className="bg-cable-950/80 p-3 rounded-lg border border-cable-border/70">
+              <span className="text-[10px] uppercase font-mono text-slate-400 block">DAZN & Sportsnet+</span>
+              <span className="text-purple-300 font-bold">Sports Connectors</span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 3. Xtream Codes Provider Connection */}
       <section className="bg-cable-900 border border-cable-border rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
         <div className="flex items-center justify-between border-b border-cable-border pb-3">
           <div className="flex items-center space-x-3">

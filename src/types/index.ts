@@ -12,6 +12,54 @@ export interface Channel {
   streamId?: string; // Xtream Codes stream ID if applicable
   catchupDays?: number; // Days of catch-up available (e.g. 7 days like Bell Fibe / VMedia)
   catchupType?: 'shift' | 'flussonic' | 'xc' | 'append';
+  providerId?: string; // ID of the upstream IPTV provider / syndicator
+  providerBadge?: string; // e.g. "VMedia", "Pluto TV", "Amagi", "Wurl", "TekSavvy"
+  streamProtocol?: 'HLS' | 'MPEG-DASH' | 'Flussonic';
+  originServer?: string; // Upstream streaming CDN/server
+}
+
+export type ProviderCategory =
+  | 'ALL'
+  | 'FAST_SYNDICATOR'
+  | 'LICENSED_BDU'
+  | 'CONSUMER_FAST'
+  | 'SPORTS_D2C'
+  | 'XTREAM_MIDDLEWARE';
+
+export interface ProviderConnection {
+  id: string;
+  name: string;
+  slug: string;
+  category: 'FAST_SYNDICATOR' | 'LICENSED_BDU' | 'CONSUMER_FAST' | 'SPORTS_D2C' | 'XTREAM_MIDDLEWARE';
+  subTitle: string;
+  description: string;
+  badge: string;
+  licensedModel:
+    | 'White-Label B2B'
+    | 'Direct FAST Syndication'
+    | 'CRTC Licensed BDU'
+    | 'D2C Subscription Auth'
+    | 'XC Middleware'
+    | 'Public Broadcast Index';
+  originServer: string;
+  protocol: 'HLS' | 'MPEG-DASH' | 'Flussonic';
+  drmProtection: 'None (FAST)' | 'Widevine / FairPlay' | 'Tokenized AES-128' | 'Managed Multicast' | 'Session Token';
+  status: 'connected' | 'disconnected' | 'connecting';
+  latencyMs: number;
+  channelRangeStart: number;
+  channelCount: number;
+  importedChannelIds: string[];
+  m3uUrl?: string;
+  epgUrl?: string;
+  authType: 'none' | 'credentials' | 'token' | 'sso_portal';
+  credentials?: {
+    username?: string;
+    password?: string;
+    serverUrl?: string;
+    subscriberId?: string;
+  };
+  isOfficialLicensed: boolean;
+  websiteUrl?: string;
 }
 
 export interface PlaylistSource {

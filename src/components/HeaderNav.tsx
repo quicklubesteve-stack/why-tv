@@ -32,6 +32,7 @@ interface HeaderNavProps {
   onOpenSportsBar?: () => void;
   onOpenPvrModal?: () => void;
   onOpenQuickSearch?: () => void;
+  onOpenProviderHub?: () => void;
   activeRecordingsCount?: number;
 }
 
@@ -49,6 +50,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onOpenSportsBar,
   onOpenPvrModal,
   onOpenQuickSearch,
+  onOpenProviderHub,
   activeRecordingsCount = 0,
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -205,6 +207,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
               {activeRecordingsCount > 0 && (
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               )}
+            </button>
+          )}
+
+          {/* Provider Integrations Hub Trigger */}
+          {onOpenProviderHub && (
+            <button
+              onClick={onOpenProviderHub}
+              className="flex items-center space-x-1.5 bg-cable-850 hover:bg-cable-800 border border-emerald-500/50 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold text-emerald-300 shadow cable-focus-ring"
+              title="Authorized IPTV Provider Integrations (Amagi, Wurl, VMedia, Pluto TV, etc.)"
+            >
+              <Server className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Providers</span>
+              <span className="text-[9px] bg-emerald-950 px-1 py-0.2 rounded text-emerald-300 border border-emerald-800">12</span>
             </button>
           )}
 

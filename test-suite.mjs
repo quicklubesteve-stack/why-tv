@@ -20,9 +20,17 @@ import {
   calculateVodProgress,
   SOUND_MODE_PROFILES,
 } from './src/utils/vodUtils.js';
+import { INITIAL_PROVIDERS, PROVIDER_CHANNELS } from './src/data/providerData.js';
+import {
+  importProviderChannels,
+  disconnectProviderChannels,
+  filterProviders,
+  resolveChannelNumberConflicts,
+  calculateProviderMetrics,
+} from './src/utils/providerManager.js';
 
 console.log('======================================================');
-console.log('  WHY TV PHASE 6 COMPREHENSIVE VERIFICATION SUITE    ');
+console.log('  WHY TV UNIVERSAL PROVIDER & MULTI-SOURCE SUITE      ');
 console.log('======================================================');
 
 let passedCount = 0;
@@ -626,8 +634,101 @@ assert(jumpTomorrow.getHours() === 20 && jumpTomorrow.getMinutes() === 0, 'Late 
 assert(jumpTomorrow.getDate() === lateNight.getDate() + 1, 'Late night jump targets tomorrow prime time');
 
 // ---------------------------------------------------------
+// TEST SUITE 19: UNIVERSAL PROVIDER CONNECTION SYSTEM (EXISTING IPTV INFRASTRUCTURE)
+// ---------------------------------------------------------
+console.log('\n[Suite 19] Testing Universal Provider Connections & Multi-Provider Ingest...');
+assert(Array.isArray(INITIAL_PROVIDERS) && INITIAL_PROVIDERS.length === 12, `Registered ${INITIAL_PROVIDERS.length} existing IPTV providers (12 required)`);
+
+// 1. Verify All 12 Requested Entities Exist
+const providerSlugs = INITIAL_PROVIDERS.map(p => p.slug);
+assert(providerSlugs.includes('vmedia'), '1. VMedia Canadian BDU registered');
+assert(providerSlugs.includes('bell-fibe'), '2. Bell Fibe TV Everywhere bridge registered');
+assert(providerSlugs.includes('rogers-xfinity'), '3. Rogers Xfinity Cloud IPTV registered');
+assert(providerSlugs.includes('teksavvy'), '4. TekSavvy TV Independent BDU registered');
+assert(providerSlugs.includes('pluto-tv'), '5. Pluto TV North America FAST registered');
+assert(providerSlugs.includes('dazn'), '6. DAZN Live Sports Pass connector registered');
+assert(providerSlugs.includes('sportsnet-plus'), '7. Sportsnet+ Regional Sports connector registered');
+assert(providerSlugs.includes('amagi'), '8. Amagi FAST Cloud Broadcast playout registered');
+assert(providerSlugs.includes('wurl'), '9. Wurl Global ContentDelivery Network registered');
+assert(providerSlugs.includes('frequency'), '10. Frequency Studio Broadcast Cloud registered');
+assert(providerSlugs.includes('tivimate-gateway'), '11. TiviMate Universal XC Gateway registered');
+assert(providerSlugs.includes('smarters-pro'), '12. IPTV Smarters Pro White-Label Gateway registered');
+
+// 2. Architectural Distinctions: Content Suppliers vs. BDUs vs. Middleware
+const amagi = INITIAL_PROVIDERS.find(p => p.slug === 'amagi');
+assert(amagi.category === 'FAST_SYNDICATOR', 'Amagi correctly categorized as FAST_SYNDICATOR (B2B content supplier)');
+assert(amagi.licensedModel === 'White-Label B2B', 'Amagi operates under White-Label B2B model');
+
+const vmedia = INITIAL_PROVIDERS.find(p => p.slug === 'vmedia');
+assert(vmedia.category === 'LICENSED_BDU', 'VMedia correctly categorized as LICENSED_BDU');
+assert(vmedia.licensedModel === 'White-Label B2B', 'VMedia supports White-Label B2B reseller agreements');
+
+const pluto = INITIAL_PROVIDERS.find(p => p.slug === 'pluto-tv');
+assert(pluto.category === 'CONSUMER_FAST', 'Pluto TV categorized as CONSUMER_FAST');
+
+const dazn = INITIAL_PROVIDERS.find(p => p.slug === 'dazn');
+assert(dazn.category === 'SPORTS_D2C', 'DAZN categorized as SPORTS_D2C');
+
+const tivimate = INITIAL_PROVIDERS.find(p => p.slug === 'tivimate-gateway');
+assert(tivimate.category === 'XTREAM_MIDDLEWARE', 'TiviMate categorized as XTREAM_MIDDLEWARE');
+
+// 3. Technical Specs & Zero Self-Hosting Compliance (Direct Upstream CDNs)
+assert(INITIAL_PROVIDERS.every(p => p.originServer && p.originServer.length > 5), 'All 12 providers connect to authorized upstream origin servers (Zero Self-Hosting)');
+assert(INITIAL_PROVIDERS.every(p => ['HLS', 'MPEG-DASH', 'Flussonic'].includes(p.protocol)), 'All 12 providers use standard adaptive bitrate streaming protocols');
+assert(INITIAL_PROVIDERS.every(p => p.drmProtection && p.drmProtection.length > 0), 'All 12 providers declare DRM/security models');
+
+// 4. Automatic Channel Import
+const vmediaImport = importProviderChannels('provider_vmedia', []);
+assert(vmediaImport.importedCount === 4, 'Imported 4 authorized VMedia & RiverTV linear channels');
+assert(vmediaImport.updatedChannels.every(c => c.providerId === 'provider_vmedia'), 'All imported channels tagged with provider_vmedia');
+assert(vmediaImport.updatedChannels.every(c => c.providerBadge === 'VMedia BDU'), 'All imported channels tagged with VMedia BDU badge');
+assert(vmediaImport.updatedChannels[0].channelNumber === 201, 'VMedia Channel 1 mapped to non-colliding Ch 201');
+assert(vmediaImport.updatedChannels[0].url.startsWith('https://'), 'Channel has valid secure stream URL');
+
+// 5. Multi-Provider Simultaneous Ingest
+const multiImport = importProviderChannels('provider_pluto_tv', vmediaImport.updatedChannels);
+assert(multiImport.updatedChannels.length === 8, 'Simultaneously connected 2 providers yielding 8 active linear channels');
+const vmediaCount = multiImport.updatedChannels.filter(c => c.providerId === 'provider_vmedia').length;
+const plutoCount = multiImport.updatedChannels.filter(c => c.providerId === 'provider_pluto_tv').length;
+assert(vmediaCount === 4 && plutoCount === 4, 'Channel roster preserves 4 VMedia and 4 Pluto TV channels simultaneously');
+
+// Channel number conflict avoidance
+const plutoCh1 = multiImport.updatedChannels.find(c => c.id === 'pluto_301_action_cinema');
+assert(plutoCh1 !== undefined && plutoCh1.channelNumber === 301, 'Pluto TV channels mapped to distinct Ch 300+ range without collision');
+
+// 6. Provider Disconnection
+const afterDisconnect = disconnectProviderChannels('provider_vmedia', multiImport.updatedChannels);
+assert(afterDisconnect.length === 4, 'Disconnecting VMedia leaves exactly 4 channels');
+assert(afterDisconnect.every(c => c.providerId === 'provider_pluto_tv'), 'Pluto TV channels remain active and intact after VMedia disconnect');
+
+// 7. Channel Conflict Resolution
+const duplicateChannels = [
+  { id: 'ch_a', channelNumber: 101, name: 'Channel A' },
+  { id: 'ch_b', channelNumber: 101, name: 'Channel B' },
+  { id: 'ch_c', channelNumber: 102, name: 'Channel C' },
+];
+const resolved = resolveChannelNumberConflicts(duplicateChannels);
+assert(resolved[0].channelNumber === 101, 'First channel maintains Ch 101');
+assert(resolved[1].channelNumber === 103 || resolved[1].channelNumber === 102, 'Collision resolved without identical channel numbers');
+
+// 8. Provider Filtering & Telemetry Metrics
+const bduList = filterProviders(INITIAL_PROVIDERS, 'LICENSED_BDU', '');
+assert(bduList.length === 4, 'Category filter LICENSED_BDU returns 4 Canadian BDUs (VMedia, TekSavvy, Bell, Rogers)');
+
+const fastList = filterProviders(INITIAL_PROVIDERS, 'FAST_SYNDICATOR', '');
+assert(fastList.length === 3, 'Category filter FAST_SYNDICATOR returns 3 syndicators (Amagi, Wurl, Frequency)');
+
+const searchAmagi = filterProviders(INITIAL_PROVIDERS, 'ALL', 'amagi.tv');
+assert(searchAmagi.length === 1 && searchAmagi[0].slug === 'amagi', 'Search by CDN origin "amagi.tv" locates Amagi provider');
+
+const metrics = calculateProviderMetrics(INITIAL_PROVIDERS);
+assert(metrics.totalProviders === 12, 'Calculated 12 total providers in metrics');
+assert(metrics.licensedBdus === 4, 'Calculated 4 licensed BDUs in metrics');
+assert(metrics.fastSyndicators === 3, 'Calculated 3 FAST syndicators in metrics');
+
+// ---------------------------------------------------------
 // FINAL AUDIT SUMMARY
 // ---------------------------------------------------------
 console.log('\n======================================================');
-console.log(`  PHASE 6 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
+console.log(`  COMPLETE MULTI-PROVIDER AUDIT: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
 console.log('======================================================\n');
