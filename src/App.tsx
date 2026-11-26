@@ -53,6 +53,7 @@ import {
   importProviderChannels,
   disconnectProviderChannels,
 } from './utils/providerManager';
+import { DEDICATED_CHANNEL_SCHEDULES } from './data/demoData';
 
 export const App: React.FC = () => {
   // Global State
@@ -272,13 +273,42 @@ export const App: React.FC = () => {
     const now = Date.now();
     const mappedId = epgMappings[channel.id] || channel.tvgId || channel.id;
 
-    const channelProgs = epgPrograms.filter((p) => p.channelId === mappedId);
+    const channelProgs = epgPrograms.filter(
+      (p) => p.channelId === mappedId || p.channelId === channel.id || p.channelId === channel.tvgId
+    );
     channelProgs.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
-    const current = channelProgs.find(
+    let current = channelProgs.find(
       (p) => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now
     );
-    const next = channelProgs.find((p) => new Date(p.start).getTime() > now);
+    let next = channelProgs.find((p) => new Date(p.start).getTime() > now);
+
+    // Resilient fallback for dedicated channels (e.g. live football & sports) if not in EPG
+    if (!current && DEDICATED_CHANNEL_SCHEDULES[channel.channelNumber]) {
+      const sched = DEDICATED_CHANNEL_SCHEDULES[channel.channelNumber];
+      const liveStart = new Date(now - 45 * 60 * 1000).toISOString();
+      const liveEnd = new Date(now + 75 * 60 * 1000).toISOString();
+      current = {
+        id: `sched_live_${channel.id}`,
+        channelId: mappedId,
+        title: sched.liveTitle,
+        description: sched.liveDesc,
+        category: sched.category,
+        start: liveStart,
+        end: liveEnd,
+      };
+      if (!next && sched.upcoming.length > 0) {
+        next = {
+          id: `sched_next_${channel.id}`,
+          channelId: mappedId,
+          title: sched.upcoming[0].title,
+          description: sched.upcoming[0].desc,
+          category: sched.upcoming[0].category,
+          start: liveEnd,
+          end: new Date(now + 135 * 60 * 1000).toISOString(),
+        };
+      }
+    }
 
     return { current, next };
   };

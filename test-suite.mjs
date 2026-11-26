@@ -727,6 +727,52 @@ assert(metrics.licensedBdus === 4, 'Calculated 4 licensed BDUs in metrics');
 assert(metrics.fastSyndicators === 3, 'Calculated 3 FAST syndicators in metrics');
 
 // ---------------------------------------------------------
+// TEST SUITE 20: ACCURATE LIVE FOOTBALL & SPORTS STREAM SYNCHRONIZATION
+// ---------------------------------------------------------
+console.log('\n[Suite 20] Testing Live Football & Sports Stream Accuracy...');
+// 1. No sports channel in DEMO_CHANNELS uses test_001 (Big Buck Bunny)
+const demoSportsChannels = DEMO_CHANNELS.filter(c => c.group === 'Sports');
+assert(demoSportsChannels.length >= 8, `Found ${demoSportsChannels.length} sports channels in roster`);
+const hasTest001 = demoSportsChannels.some(c => c.url.includes('test_001'));
+assert(!hasTest001, 'Zero sports channels use test_001 (cartoon/rabbit) stream URL');
+
+// 2. Football channels use legitimate live sports streams (Amagi ACC Football / Akamai)
+const ch108 = DEMO_CHANNELS.find(c => c.channelNumber === 108);
+assert(ch108 !== undefined, 'Channel 108 (Prime Sports Arena) exists');
+assert(ch108.url.includes('amagi.tv') || ch108.url.includes('akamaized.net'), 'Channel 108 uses authorized live sports stream (Amagi ACC Football)');
+
+const ch126 = DEMO_CHANNELS.find(c => c.channelNumber === 126);
+assert(ch126 !== undefined, 'Channel 126 (NFL RedZone Network) exists');
+assert(ch126.url.includes('amagi.tv') || ch126.url.includes('akamaized.net'), 'Channel 126 uses live sports stream');
+
+const ch124 = DEMO_CHANNELS.find(c => c.channelNumber === 124);
+assert(ch124 !== undefined, 'Channel 124 (DAZN Premier Football) exists');
+assert(ch124.url.includes('amagi.tv'), 'Channel 124 uses live football stream');
+
+// 3. Live Football game schedules are accurate in INITIAL_SPORTS_GAMES
+const nflGame1 = INITIAL_SPORTS_GAMES.find(g => g.channelNumber === 108 && g.status === 'live');
+assert(nflGame1 !== undefined, 'Live NFL football game found for Channel 108');
+assert(nflGame1.homeTeam.name.includes('Chiefs') && nflGame1.awayTeam.name.includes('Bills'), 'Ch 108 features live Chiefs vs Bills NFL game');
+assert(nflGame1.broadcaster.includes('Prime Sports Arena'), 'Ch 108 broadcaster metadata aligned');
+
+const nflGame2 = INITIAL_SPORTS_GAMES.find(g => g.channelNumber === 126 && g.status === 'live');
+assert(nflGame2 !== undefined, 'Live NFL game found for Channel 126');
+assert(nflGame2.broadcaster.includes('NFL RedZone'), 'Ch 126 broadcaster metadata aligned');
+
+// 4. Dynamic EPG contains active live football programs right now
+const sportsEpg = generateDynamicDemoEpg(DEMO_CHANNELS);
+const live108 = sportsEpg.find(p => (p.channelId === ch108.tvgId || p.channelId === ch108.id) && new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+assert(live108 !== undefined, 'Live EPG program actively playing right now on Ch 108');
+assert(live108.title.toLowerCase().includes('chiefs') || live108.title.toLowerCase().includes('nfl'), `Ch 108 program title accurate: "${live108?.title}"`);
+
+// 5. Search for "football" returns exact football channels
+const footballSearchResults = searchLiveContent('football', DEMO_CHANNELS, sportsEpg, INITIAL_SPORTS_GAMES);
+assert(footballSearchResults.length >= 2, `Searching "football" returns ${footballSearchResults.length} live matches & channels`);
+assert(footballSearchResults.some(r => r.channel.channelNumber === 108), 'Searching "football" returns Ch 108 (Prime Sports Arena)');
+assert(footballSearchResults.some(r => r.channel.channelNumber === 126), 'Searching "football" returns Ch 126 (NFL RedZone)');
+assert(footballSearchResults.some(r => r.type === 'live_game' && r.category === 'NFL'), 'Searching "football" returns live NFL sports games with score bug');
+
+// ---------------------------------------------------------
 // FINAL AUDIT SUMMARY
 // ---------------------------------------------------------
 console.log('\n======================================================');

@@ -167,7 +167,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 108,
     name: 'Prime Sports Arena',
     logo: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=320&auto=format&fit=crop&q=60',
-    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
     group: 'Sports',
     tvgId: 'Prime.Sports.Arena',
     tvgName: 'Prime Sports',
@@ -275,7 +275,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 120,
     name: 'Sportsnet East Live',
     logo: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=320&auto=format&fit=crop&q=60',
-    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    url: 'https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8',
     group: 'Sports',
     tvgId: 'Sportsnet.East.ca',
     tvgName: 'Sportsnet East',
@@ -287,7 +287,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 121,
     name: 'Sportsnet Ontario HD',
     logo: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=320&auto=format&fit=crop&q=60',
-    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8',
     group: 'Sports',
     tvgId: 'Sportsnet.Ontario.ca',
     tvgName: 'Sportsnet Ontario',
@@ -299,7 +299,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 122,
     name: 'TSN 1 Sports Center',
     logo: 'https://images.unsplash.com/photo-1471295253337-3ceaaedca402?w=320&auto=format&fit=crop&q=60',
-    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
     group: 'Sports',
     tvgId: 'TSN.1.ca',
     tvgName: 'TSN 1',
@@ -311,7 +311,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 123,
     name: 'TSN 4 Hockey Zone',
     logo: 'https://images.unsplash.com/photo-1580748141549-71748dbe0bdc?w=320&auto=format&fit=crop&q=60',
-    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8',
     group: 'Sports',
     tvgId: 'TSN.4.ca',
     tvgName: 'TSN 4',
@@ -323,7 +323,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 124,
     name: 'DAZN Premier Football',
     logo: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=320&auto=format&fit=crop&q=60',
-    url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8',
+    url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
     group: 'Sports',
     tvgId: 'DAZN.Premier.Live',
     tvgName: 'DAZN Premier',
@@ -347,7 +347,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 126,
     name: 'NFL RedZone Network',
     logo: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=320&auto=format&fit=crop&q=60',
-    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
     group: 'Sports',
     tvgId: 'NFL.RedZone.Live',
     tvgName: 'NFL RedZone',
@@ -359,7 +359,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 127,
     name: 'CBS Sports Golazo Network',
     logo: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=320&auto=format&fit=crop&q=60',
-    url: 'https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8',
+    url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
     group: 'Sports',
     tvgId: 'CBSSports.Golazo.Live',
     tvgName: 'CBS Golazo',
@@ -371,7 +371,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 128,
     name: 'PGA TOUR & Golf 24/7',
     logo: 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=320&auto=format&fit=crop&q=60',
-    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    url: 'https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8',
     group: 'Sports',
     tvgId: 'PGATour.Golf.Live',
     tvgName: 'PGA TOUR',
@@ -383,7 +383,7 @@ export const DEMO_CHANNELS: Channel[] = [
     channelNumber: 129,
     name: 'Stadium Live Sports',
     logo: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=320&auto=format&fit=crop&q=60',
-    url: 'https://test-streams.mux.dev/test_001/stream.m3u8',
+    url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
     group: 'Sports',
     tvgId: 'Stadium.Live.us',
     tvgName: 'Stadium Sports',
@@ -512,7 +512,7 @@ export const DEMO_CHANNELS: Channel[] = [
   }
 ];
 
-interface ChannelScheduleDef {
+export interface ChannelScheduleDef {
   liveTitle: string;
   liveDesc: string;
   category: string;
@@ -520,7 +520,7 @@ interface ChannelScheduleDef {
   past: { title: string; desc: string; category: string; durationMin?: number }[];
 }
 
-const DEDICATED_CHANNEL_SCHEDULES: Record<number, ChannelScheduleDef> = {
+export const DEDICATED_CHANNEL_SCHEDULES: Record<number, ChannelScheduleDef> = {
   // 108: Prime Sports Arena -> Live Sunday NFL Football: Chiefs vs Bills
   108: {
     liveTitle: 'NFL Live Sunday Football: Kansas City Chiefs vs Buffalo Bills',

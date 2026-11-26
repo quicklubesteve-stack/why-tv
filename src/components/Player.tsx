@@ -39,6 +39,8 @@ import {
 } from '../utils/streamDiagnostics';
 import { calculateProgramTimeshift, formatDuration } from '../utils/catchupUtils';
 import { SOUND_MODE_PROFILES, calculateVodProgress, saveVodProgress, getVodProgressForItem } from '../utils/vodUtils';
+import { INITIAL_SPORTS_GAMES } from '../data/sportsData';
+import { DEDICATED_CHANNEL_SCHEDULES } from '../data/demoData';
 
 interface PlayerProps {
   channel?: Channel | null;
@@ -117,6 +119,33 @@ export const Player: React.FC<PlayerProps> = ({
     message: string;
     details: string;
   } | null>(null);
+
+  // Active live sports game and dedicated channel schedule matching
+  const activeLiveGame = React.useMemo(() => {
+    if (!channel) return null;
+    return (
+      INITIAL_SPORTS_GAMES.find(
+        (g) => g.channelNumber === channel.channelNumber && g.status === 'live'
+      ) || null
+    );
+  }, [channel]);
+
+  const dedicatedSchedule = React.useMemo(() => {
+    if (!channel) return null;
+    return DEDICATED_CHANNEL_SCHEDULES[channel.channelNumber] || null;
+  }, [channel]);
+
+  const displayTitle = activeLiveGame
+    ? `${activeLiveGame.league} Live: ${activeLiveGame.awayTeam.name} vs ${activeLiveGame.homeTeam.name}`
+    : currentProgram?.title || dedicatedSchedule?.liveTitle || `${channel?.name || 'Live'} Broadcast`;
+
+  const displayDesc = activeLiveGame
+    ? `${activeLiveGame.statsSnippet} • Live broadcast from ${activeLiveGame.broadcaster}.`
+    : currentProgram?.description || dedicatedSchedule?.liveDesc || `Live streaming broadcast from ${channel?.sourceName || 'WHY TV Network'}.`;
+
+  const displayCategory = activeLiveGame
+    ? 'Sports'
+    : currentProgram?.category || dedicatedSchedule?.category || channel?.group || 'General';
 
   // Auto-hide OSD after 5.5 seconds of inactivity
   const osdTimerRef = useRef<number | null>(null);
@@ -783,6 +812,44 @@ export const Player: React.FC<PlayerProps> = ({
             </div>
           ) : null}
 
+          {/* Live Sports Broadcast Score Bug (Top Bar Overlay) */}
+          {activeLiveGame && !vodItem && (
+            <div className="hidden sm:flex items-stretch bg-black/90 backdrop-blur-md border border-neutral-700/80 rounded-xl overflow-hidden shadow-2xl pointer-events-auto">
+              <div className="bg-red-600 px-3 py-2 flex flex-col items-center justify-center text-white shrink-0">
+                <span className="text-[10px] font-black uppercase tracking-wider">{activeLiveGame.league}</span>
+                <span className="flex items-center space-x-1 text-[9px] font-bold text-red-100">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
+                  <span>LIVE</span>
+                </span>
+              </div>
+              <div className="px-3 py-2 flex items-center space-x-2 border-r border-neutral-700/80 bg-neutral-950/80">
+                <span className="text-xs font-black text-slate-100 tracking-wider">
+                  {activeLiveGame.awayTeam.abbreviation || activeLiveGame.awayTeam.name.slice(0, 3).toUpperCase()}
+                </span>
+                <span className="text-sm font-extrabold text-amber-400 font-mono">
+                  {activeLiveGame.awayTeam.score}
+                </span>
+              </div>
+              <div className="px-3 py-2 flex items-center space-x-2 border-r border-neutral-700/80 bg-neutral-950/80">
+                <span className="text-xs font-black text-slate-100 tracking-wider">
+                  {activeLiveGame.homeTeam.abbreviation || activeLiveGame.homeTeam.name.slice(0, 3).toUpperCase()}
+                </span>
+                <span className="text-sm font-extrabold text-amber-400 font-mono">
+                  {activeLiveGame.homeTeam.score}
+                </span>
+              </div>
+              <div className="px-3 py-1.5 flex flex-col justify-center bg-neutral-900/95 text-right">
+                <div className="text-[11px] font-mono font-bold text-amber-400 flex items-center justify-end space-x-1">
+                  <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                  <span>{activeLiveGame.periodOrTime}</span>
+                </div>
+                <div className="text-[9px] text-slate-300 font-mono truncate max-w-[170px]">
+                  {activeLiveGame.statsSnippet}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center space-x-2 pointer-events-auto">
             {/* Audio Sound Mode Preset Selector */}
             <div className="relative">
@@ -953,33 +1020,29 @@ export const Player: React.FC<PlayerProps> = ({
           )}
 
           {/* Cable Program Banner with Restart TV Button (Live TV) */}
-          {!vodItem && currentProgram && (
+          {!vodItem && (currentProgram || dedicatedSchedule || activeLiveGame) && (
             <div className="bg-neutral-950/90 backdrop-blur-md border border-neutral-700/80 p-4 rounded-xl shadow-2xl">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center space-x-2 text-xs text-amber-400 font-mono">
                     <span className="uppercase font-bold tracking-wider">
-                      {isRestarted ? 'RESTART PLAYBACK' : 'NOW PLAYING'}
+                      {isRestarted ? 'RESTART PLAYBACK' : activeLiveGame ? '🔴 LIVE SPORTS FIXTURE' : 'NOW PLAYING'}
                     </span>
                     <span>•</span>
                     <span>
-                      {formatTimeInZone(currentProgram.start, timeZone)} - {formatTimeInZone(currentProgram.end, timeZone)}
+                      {currentProgram
+                        ? `${formatTimeInZone(currentProgram.start, timeZone)} - ${formatTimeInZone(currentProgram.end, timeZone)}`
+                        : 'LIVE BROADCAST'}
                     </span>
-                    {currentProgram.category && (
-                      <>
-                        <span>•</span>
-                        <span className="text-slate-300">{currentProgram.category}</span>
-                      </>
-                    )}
+                    <span>•</span>
+                    <span className="text-slate-300">{displayCategory}</span>
                   </div>
                   <h4 className="text-lg font-bold text-white truncate mt-0.5">
-                    {currentProgram.title}
+                    {displayTitle}
                   </h4>
-                  {currentProgram.description && (
-                    <p className="text-xs text-slate-300 line-clamp-1 mt-0.5">
-                      {currentProgram.description}
-                    </p>
-                  )}
+                  <p className="text-xs text-slate-300 line-clamp-1 mt-0.5">
+                    {displayDesc}
+                  </p>
                 </div>
 
                 {/* Restart TV & Go Live Button (Bell Fibe / VMedia style) */}

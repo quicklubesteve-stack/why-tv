@@ -13,6 +13,7 @@ import {
 import {
   DEMO_CHANNELS,
   DEMO_PLAYLIST_SOURCE,
+  DEMO_SOURCE_ID,
   generateDynamicDemoEpg,
 } from '../data/demoData';
 
@@ -73,15 +74,31 @@ export class StorageService {
       if (data) {
         const parsed: Channel[] = JSON.parse(data);
         if (parsed.length > 0) {
+          // Upgrade demo channels whose stream URLs were old cartoon test streams (test_001) or need canonical update
+          const canonicalMap = new Map(DEMO_CHANNELS.map((c) => [c.channelNumber, c]));
+          const upgraded = parsed.map((c) => {
+            const canonical = canonicalMap.get(c.channelNumber);
+            if (canonical && (c.url.includes('test_001') || c.sourceId === DEMO_SOURCE_ID)) {
+              return {
+                ...c,
+                url: canonical.url,
+                name: canonical.name,
+                logo: canonical.logo,
+                group: canonical.group,
+                tvgId: canonical.tvgId,
+                tvgName: canonical.tvgName,
+              };
+            }
+            return c;
+          });
+
           // Merge any demo channels that aren't present yet so expanded channels (Phase 5) automatically appear
-          const existingIds = new Set(parsed.map((c) => c.id));
+          const existingIds = new Set(upgraded.map((c) => c.id));
           const missingDemoChannels = DEMO_CHANNELS.filter((c) => !existingIds.has(c.id));
-          if (missingDemoChannels.length > 0) {
-            const merged = [...parsed, ...missingDemoChannels];
-            this.saveChannels(merged);
-            return merged;
-          }
-          return parsed;
+          const finalChannels = missingDemoChannels.length > 0 ? [...upgraded, ...missingDemoChannels] : upgraded;
+
+          this.saveChannels(finalChannels);
+          return finalChannels;
         }
       }
     } catch (e) {
@@ -236,16 +253,23 @@ export class StorageService {
         const parsed: EpgProgram[] = JSON.parse(data);
         if (parsed && parsed.length > 0) {
           const nowMs = Date.now();
-          // Check if parsed EPG contains valid live programs actively running right now
-          const hasActiveShows = parsed.some(
-            (p) => new Date(p.start).getTime() <= nowMs && new Date(p.end).getTime() > nowMs
-          );
-          // Check if it has programs for football and new sports channels
-          const coversSports = parsed.some(
-            (p) => p.title.toLowerCase().includes('chiefs') || p.title.toLowerCase().includes('football')
+          // Count active channels with programs running right now
+          const activeChannelIds = new Set(
+            parsed
+              .filter((p) => new Date(p.start).getTime() <= nowMs && new Date(p.end).getTime() > nowMs)
+              .map((p) => p.channelId)
           );
 
-          if (hasActiveShows && coversSports) {
+          // Check if football is represented
+          const coversFootball = parsed.some(
+            (p) =>
+              p.title.toLowerCase().includes('chiefs') ||
+              p.title.toLowerCase().includes('football') ||
+              p.title.toLowerCase().includes('nfl')
+          );
+
+          // If at least 70% of channels have currently active programs and football is covered, keep cache
+          if (activeChannelIds.size >= Math.min(channels.length * 0.7, 10) && coversFootball) {
             return parsed;
           }
         }
