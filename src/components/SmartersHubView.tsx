@@ -13,6 +13,7 @@ import {
   Play,
   Server,
   Zap,
+  HardDrive,
 } from 'lucide-react';
 import { Channel, ContinueWatchingItem, RecentChannel, XtreamAccountInfo, TimeZoneSetting } from '../types';
 import { formatTimeInZone, formatRelativeTime } from '../utils/dateUtils';
@@ -27,6 +28,7 @@ interface SmartersHubViewProps {
   onNavigateTab: (tab: 'home' | 'live' | 'guide' | 'multiview' | 'favourites' | 'search' | 'settings') => void;
   onSelectChannel: (channel: Channel) => void;
   onOpenXtreamModal: () => void;
+  onOpenPvrModal?: () => void;
 }
 
 export const SmartersHubView: React.FC<SmartersHubViewProps> = ({
@@ -39,6 +41,7 @@ export const SmartersHubView: React.FC<SmartersHubViewProps> = ({
   onNavigateTab,
   onSelectChannel,
   onOpenXtreamModal,
+  onOpenPvrModal,
 }) => {
   const movieCount = channels.filter((c) => (c.group || '').toLowerCase().includes('movie')).length;
 
@@ -73,6 +76,16 @@ export const SmartersHubView: React.FC<SmartersHubViewProps> = ({
               {xtreamAccount?.expDate || 'Lifetime / Active'}
             </span>
           </div>
+
+          {onOpenPvrModal && (
+            <button
+              onClick={onOpenPvrModal}
+              className="flex items-center space-x-2 px-3.5 py-2 bg-cable-800 hover:bg-cable-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold border border-cable-border cable-focus-ring"
+            >
+              <HardDrive className="w-4 h-4 text-amber-400" />
+              <span>Cloud PVR</span>
+            </button>
+          )}
 
           <button
             onClick={onOpenXtreamModal}

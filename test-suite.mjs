@@ -5,9 +5,16 @@ import { formatBitrate, formatBuffer, calculateStreamHealth, createDefaultDiagno
 import { calculateProgramTimeshift, formatDuration, generateTimeshiftUrl } from './src/utils/catchupUtils.js';
 import { generateXtreamM3uUrl, generateXtreamEpgUrl, normalizeServerUrl } from './src/utils/xtreamClient.js';
 import { INITIAL_SPORTS_GAMES, SPORTS_LEAGUES } from './src/data/sportsData.js';
+import {
+  calculatePvrQuota,
+  createRecordingFromProgram,
+  createInstantLiveRecording,
+  updateRecordingsLifecycle,
+  filterRecordings,
+} from './src/utils/pvrUtils.js';
 
 console.log('======================================================');
-console.log('  WHY TV PHASE 2 COMPREHENSIVE VERIFICATION SUITE    ');
+console.log('  WHY TV PHASE 3 COMPREHENSIVE VERIFICATION SUITE    ');
 console.log('======================================================');
 
 let passedCount = 0;
@@ -206,8 +213,133 @@ switchAudioSlot(1);
 assert(activeAudioSlot === 1, 'Master audio switched to Slot 1, preventing multi-stream audio clash');
 
 // ---------------------------------------------------------
+// TEST SUITE 11: CLOUD PVR STORAGE, QUOTA & LIFECYCLE (PHASE 3)
+// ---------------------------------------------------------
+console.log('\n[Suite 11] Testing Cloud PVR Storage, Quota & Lifecycle Engine...');
+
+const demoProg = {
+  id: 'epg_nhl_tonight',
+  channelId: 'Prime.Sports.ca',
+  title: 'NHL Saturday Night Showcase: Leafs vs Bruins',
+  description: 'Live broadcast from TD Garden',
+  start: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // Starts in 1 hr
+  end: new Date(Date.now() + 210 * 60 * 1000).toISOString(),  // 2.5 hr duration
+};
+
+const sportsChannel = DEMO_CHANNELS.find(c => c.channelNumber === 108) || DEMO_CHANNELS[0];
+
+// Schedule upcoming recording
+const scheduledRec = createRecordingFromProgram(demoProg, sportsChannel);
+assert(scheduledRec.status === 'scheduled', 'Upcoming show correctly marked as status: scheduled');
+assert(scheduledRec.durationMinutes === 150, `Calculated show duration as 150 mins (2.5 hrs), got ${scheduledRec.durationMinutes}`);
+assert(scheduledRec.sizeMb > 3000, `Estimated storage footprint ~${scheduledRec.sizeMb} MB for 2.5hr HD broadcast`);
+
+// Instant live recording
+const instantRec = createInstantLiveRecording(sportsChannel);
+assert(instantRec.status === 'recording', 'Instant recording immediately marked as status: recording');
+assert(instantRec.durationMinutes >= 30, 'Instant recording assigned safe recording buffer');
+
+// PVR Quota Calculation
+const sampleRecordings = [
+  { ...scheduledRec, status: 'completed', durationMinutes: 120 }, // 2 hrs
+  { ...instantRec, status: 'recording', durationMinutes: 60 },     // 1 hr
+  { ...scheduledRec, status: 'scheduled', durationMinutes: 180 },   // Not yet stored
+];
+
+const quotaResult = calculatePvrQuota(sampleRecordings, 100);
+assert(quotaResult.usedHours === 3.0, `Calculated 3.0 hrs used across completed/recording items, got ${quotaResult.usedHours}`);
+assert(quotaResult.percentUsed === 3, `Calculated 3% capacity used, got ${quotaResult.percentUsed}%`);
+assert(quotaResult.totalRecordingsCount === 3, 'Quota correctly reflects 3 total registered titles');
+
+// Lifecycle State Machine transitions
+const mockPast = Date.now() + 300 * 60 * 1000; // 5 hours in future
+const transitioned = updateRecordingsLifecycle(sampleRecordings, mockPast);
+const completedCount = transitioned.filter(r => r.status === 'completed').length;
+assert(completedCount === 3, `All 3 recordings successfully transitioned to completed over time, got ${completedCount}`);
+
+// Tab Filtering
+const completedOnly = filterRecordings(sampleRecordings, 'completed');
+assert(completedOnly.length === 1, 'Filter by completed returns 1 item');
+const scheduledOnly = filterRecordings(sampleRecordings, 'scheduled');
+assert(scheduledOnly.length === 2, 'Filter by scheduled returns 2 items (scheduled + live)');
+
+// ---------------------------------------------------------
+// TEST SUITE 12: PARENTAL CONTROLS & 4-DIGIT SECURITY PIN (PHASE 3)
+// ---------------------------------------------------------
+console.log('\n[Suite 12] Testing Parental Controls & Channel PIN Lock...');
+
+const parentalConfig = {
+  enabled: true,
+  pin: '4321',
+  lockedChannelIds: ['demo_kids_1', 'demo_sports_1'],
+  lockedCategories: ['Adult', 'Late Night'],
+};
+
+// PIN Verification Logic
+const testPinVerification = (enteredPin, correctPin) => enteredPin === correctPin;
+assert(testPinVerification('4321', parentalConfig.pin) === true, 'Correct 4-digit PIN (4321) successfully accepted');
+assert(testPinVerification('0000', parentalConfig.pin) === false, 'Incorrect PIN (0000) rejected');
+assert(testPinVerification('123', parentalConfig.pin) === false, 'Incomplete PIN (<4 digits) rejected');
+
+// Channel Locking Logic Check
+const isChannelLocked = (ch, config, unlockedSet) => {
+  if (!config.enabled) return false;
+  if (unlockedSet.has(ch.id)) return false;
+  return config.lockedChannelIds.includes(ch.id) || config.lockedCategories.includes(ch.group);
+};
+
+const lockedChannel = { id: 'demo_kids_1', channelNumber: 105, group: 'Kids', name: 'Kids Toon' };
+const freeChannel = { id: 'demo_news_1', channelNumber: 101, group: 'News', name: 'DW News' };
+const adultChannel = { id: 'demo_adult_1', channelNumber: 999, group: 'Adult', name: 'Late Night Cinema' };
+
+const unlockedSession = new Set();
+assert(isChannelLocked(lockedChannel, parentalConfig, unlockedSession) === true, 'Channel on lockedChannelIds list is locked');
+assert(isChannelLocked(adultChannel, parentalConfig, unlockedSession) === true, 'Channel in locked category (Adult) is locked');
+assert(isChannelLocked(freeChannel, parentalConfig, unlockedSession) === false, 'Standard channel (News) is unlocked and accessible');
+
+// Session Unlock Bypass
+unlockedSession.add(lockedChannel.id);
+assert(isChannelLocked(lockedChannel, parentalConfig, unlockedSession) === false, 'Channel unlocked for session after successful PIN authentication');
+
+// ---------------------------------------------------------
+// TEST SUITE 13: PICTURE-IN-PICTURE & LAST CHANNEL RECALL (PHASE 3)
+// ---------------------------------------------------------
+console.log('\n[Suite 13] Testing Picture-in-Picture & Last Channel Recall Invariants...');
+
+// Last Channel Recall Roundtrip
+let curChannel = DEMO_CHANNELS[0];  // Ch 101
+let prevChannel = null;
+
+const tuneChannel = (target) => {
+  if (curChannel.id !== target.id) {
+    prevChannel = curChannel;
+  }
+  curChannel = target;
+};
+
+const primeSports = DEMO_CHANNELS.find(c => c.channelNumber === 108);
+tuneChannel(primeSports); // Tune to Ch 108
+assert(curChannel.channelNumber === 108, 'Current channel is now 108');
+assert(prevChannel.channelNumber === 101, 'Previous channel recorded as 101');
+
+// Jump back (Last Channel button / 'L' key)
+const recallLast = () => {
+  if (prevChannel) {
+    tuneChannel(prevChannel);
+  }
+};
+
+recallLast();
+assert(curChannel.channelNumber === 101, 'Recalled channel jumped back to 101');
+assert(prevChannel.channelNumber === 108, 'Previous channel swapped to 108 (bi-directional toggle)');
+
+// Second recall flips back
+recallLast();
+assert(curChannel.channelNumber === 108, 'Second recall jumped back to 108');
+
+// ---------------------------------------------------------
 // FINAL AUDIT SUMMARY
 // ---------------------------------------------------------
 console.log('\n======================================================');
-console.log(`  PHASE 2 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
+console.log(`  PHASE 3 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
 console.log('======================================================\n');

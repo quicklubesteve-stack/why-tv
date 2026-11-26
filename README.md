@@ -23,7 +23,7 @@ npm run dev
 npm run build
 npm run preview
 
-# Run the 100% verified test suite (52 tests across 10 suites):
+# Run the 100% verified test suite (75 tests across 13 suites):
 npx tsx test-suite.mjs
 ```
 
@@ -79,26 +79,46 @@ You can switch between layouts anytime using the **UI Theme Switcher** in the to
 - Direct launcher for the **Sports Companion Bar** to track scores alongside multi-game streams.
 - Swap channels on any slot or maximize to full screen.
 
-### 4. Rogers Xfinity / Sportsnet+ Sports Companion Bar (Phase 2)
+### 4. Bell Fibe / Rogers Cloud PVR & Storage Quota Manager (Phase 3)
+- **Cloud PVR Management**: Accessible via the **PVR** button in the header, Smarters Pro hub, or player controls.
+- **Storage Quota Meter**: Real-time capacity bar (e.g. `14.5 / 100 hrs used (15%)`) following Bell Fibe and Rogers Cloud PVR standards.
+- **Scheduled & Instant Recording**: Schedule recordings from the TV Guide ("Record Show") or record live broadcasts directly with the **`R`** shortcut or Record button.
+- **Automatic Lifecycle State Machine**: Automatically transitions scheduled shows to recording when air time arrives, and to completed when the program ends.
+
+### 5. Picture-in-Picture (PiP) Floating Player (Phase 3)
+- Native HTML5 desktop Picture-in-Picture support accessible via **`P`** shortcut or player controls icon.
+- Float your stream above other Windows applications and browser windows while working on your Acer laptop.
+
+### 6. Last Channel Recall / Channel Jump (Phase 3)
+- Instant two-way toggle between current and previous channel with the **`L`** key or **Last CH** button (matching the classic "Last" / "Recall" remote button on Bell Fibe TV & Rogers Xfinity remotes).
+
+### 7. Multi-Track Audio & Closed Captions Selector (Phase 3)
+- Popover menu in the player overlay to choose from available audio streams (e.g. English, French, Spanish, Stereo) and closed caption subtitle tracks.
+
+### 8. Parental Controls & 4-Digit Security PIN (Phase 3)
+- 4-digit PIN challenge modal with keypad and keyboard numbers.
+- Lock individual channels or categories (e.g. Adult / Late Night) with instant session unlocking upon entering correct PIN.
+
+### 9. Rogers Xfinity / Sportsnet+ Sports Companion Bar (Phase 2)
 - Slide-over live sports drawer accessible via **Trophy icon** in the top navigation, video player overlay, or keyboard shortcut (`S`).
 - **Real-Time Scores & Clock Tickers**: Live game tracking for **NHL Hockey** (Leafs vs Canadiens, Oilers vs Flames), **NBA Basketball** (Raptors vs Celtics), **European Soccer** (Arsenal vs Man City, Champions League), and **Motorsport** (F1 lap times and pit deltas).
 - **1-Click Tune Broadcast**: Instantly tune directly to the broadcast channel (e.g. Channel 108 Prime Sports Arena) without exiting your current stream.
 - **League Filters**: Quick pills for All Leagues, NHL Hockey, NBA Basketball, Soccer, and Motorsport.
 
-### 5. Stream Diagnostics HUD (Phase 1)
+### 10. Stream Diagnostics HUD (Phase 1)
 - Professional streaming health overlay accessible via `D` key or the **HUD** icon on the player.
 - Real-time **Resolution**, **Bitrate** (e.g. 4.5 Mbps), **Buffer Health** (seconds buffered), **Dropped Frames**, and **Audio/Video Codecs**.
 
-### 6. Quick Surfing Mini-Guide (Phase 1)
+### 11. Quick Surfing Mini-Guide (Phase 1)
 - Slide-up bottom tray accessible via `G` key or the **Mini-Guide** button while streaming.
 - Rapid channel zapping without interrupting video playback.
 
-### 7. Restart TV & Catch-up Timeshift (Phase 1)
+### 12. Restart TV & Catch-up Timeshift (Phase 1)
 - Seamless rewind to the beginning of in-progress shows.
 - Automatic timeshift URL generation for Xtream Codes (`/timeshift.php`) and Flussonic (`-timeshift_abs-`).
 - Pulsing **GO LIVE** button to snap back to the live broadcast edge.
 
-### 8. Classic Cable Box
+### 13. Classic Cable Box
 - Set-top box lean-back design with high-contrast amber focus glow (`ring-4 ring-amber-400`), live clock in Toronto (ET) or device time, and full-width TV guide.
 
 ---
@@ -112,6 +132,9 @@ WHY TV is optimized for 10-foot remote and laptop keyboard navigation:
 | **Arrow Keys (▲ ▼ ◀ ▶)** | Navigate focus ring across channels, categories, and guide cells |
 | **Enter / Space** | Tune channel, select button, or toggle play/pause |
 | **0 – 9 (Numeric Keys)** | Direct Cable Channel Dialing (dial e.g. `101` to tune to CH 101) |
+| **L** | Last Channel Recall (toggle back and forth to previous channel) |
+| **P** | Picture-in-Picture (PiP floating mini-player) |
+| **R** | Instant Record live broadcast to Cloud PVR |
 | **S** | Toggle Sports Companion Bar (live scores & game tracker) |
 | **D** | Toggle Stream Diagnostics HUD (bitrate, buffer, resolution) |
 | **G** | Toggle Quick Surfing Mini-Guide drawer |

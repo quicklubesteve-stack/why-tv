@@ -178,3 +178,45 @@ export interface SportsGame {
   channelId?: string;
   startTime?: string;
 }
+
+// ---------------------------------------------------------
+// PHASE 3: CLOUD PVR, RECORDINGS & PARENTAL CONTROLS
+// ---------------------------------------------------------
+export interface PvrRecording {
+  id: string;
+  channelId: string;
+  channelNumber: number;
+  channelName: string;
+  channelLogo?: string;
+  programTitle: string;
+  programDescription?: string;
+  startTime: string; // ISO 8601
+  endTime: string;   // ISO 8601
+  durationMinutes: number;
+  status: 'scheduled' | 'recording' | 'completed';
+  recordingUrl?: string; // Playback / Timeshift URL
+  sizeMb?: number;
+  createdAt: string;
+}
+
+export interface PvrQuota {
+  maxHours: number;    // e.g. 100 hours or 320 hours (Bell Fibe / Rogers tier)
+  usedHours: number;
+  percentUsed: number;
+  totalRecordingsCount: number;
+}
+
+export interface ParentalControlsConfig {
+  enabled: boolean;
+  pin: string; // 4-digit PIN e.g. "0000"
+  lockedChannelIds: string[];
+  lockedCategories: string[];
+}
+
+export interface MediaTrackOption {
+  id: number;
+  name: string;
+  lang?: string;
+  type: 'audio' | 'subtitle';
+  active: boolean;
+}

@@ -12,6 +12,7 @@ import {
   Layout,
   Server,
   Trophy,
+  HardDrive,
 } from 'lucide-react';
 import { TimeZoneSetting, UiThemeMode } from '../types';
 import { formatTimeInZone } from '../utils/dateUtils';
@@ -28,6 +29,8 @@ interface HeaderNavProps {
   favouritesCount: number;
   onOpenXtreamModal: () => void;
   onOpenSportsBar?: () => void;
+  onOpenPvrModal?: () => void;
+  activeRecordingsCount?: number;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -42,6 +45,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   favouritesCount,
   onOpenXtreamModal,
   onOpenSportsBar,
+  onOpenPvrModal,
+  activeRecordingsCount = 0,
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
 
@@ -163,11 +168,26 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
             <button
               onClick={onOpenSportsBar}
               className="flex items-center space-x-1.5 bg-gradient-to-r from-red-950/80 to-amber-950/80 hover:from-red-900 hover:to-amber-900 border border-amber-500/50 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold text-amber-300 shadow cable-focus-ring"
-              title="Rogers Xfinity & Sportsnet+ Live Scores Companion Bar"
+              title="Rogers Xfinity & Sportsnet+ Live Scores Companion Bar (Key: S)"
             >
               <Trophy className="w-3.5 h-3.5 text-amber-400" />
               <span className="hidden sm:inline">Sports</span>
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+            </button>
+          )}
+
+          {/* Cloud PVR Trigger */}
+          {onOpenPvrModal && (
+            <button
+              onClick={onOpenPvrModal}
+              className="flex items-center space-x-1.5 bg-cable-850 hover:bg-cable-800 border border-neutral-700 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold text-slate-300 hover:text-white shadow cable-focus-ring"
+              title="Bell Fibe / Rogers Cloud PVR Recordings"
+            >
+              <HardDrive className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">PVR</span>
+              {activeRecordingsCount > 0 && (
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              )}
             </button>
           )}
 

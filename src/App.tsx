@@ -11,6 +11,8 @@ import {
   XtreamAccountInfo,
   XtreamCredentials,
   PresetProvider,
+  PvrRecording,
+  ParentalControlsConfig,
 } from './types';
 import { StorageService } from './services/storageService';
 import { parseM3U } from './utils/m3uParser';
@@ -30,7 +32,14 @@ import { ChannelMappingModal } from './components/ChannelMappingModal';
 import { CategoryManagerModal } from './components/CategoryManagerModal';
 import { XtreamLoginModal } from './components/XtreamLoginModal';
 import { SportsCompanionBar } from './components/SportsCompanionBar';
+import { PvrRecordingsModal } from './components/PvrRecordingsModal';
+import { ParentalLockModal } from './components/ParentalLockModal';
 import { fetchXtreamLiveChannels } from './utils/xtreamClient';
+import {
+  createRecordingFromProgram,
+  createInstantLiveRecording,
+  updateRecordingsLifecycle,
+} from './utils/pvrUtils';
 
 export const App: React.FC = () => {
   // Global State
@@ -69,8 +78,23 @@ export const App: React.FC = () => {
   );
   const currentXtreamAccount: XtreamAccountInfo | undefined = xtreamAccounts[0]?.info;
 
-  // Currently playing channel
+  // Currently playing channel & Last Channel Recall
   const [currentChannel, setCurrentChannel] = useState<Channel | null>(() => channels[0] || null);
+  const [lastChannel, setLastChannel] = useState<Channel | null>(null);
+
+  // Phase 3: Cloud PVR Recordings
+  const [recordings, setRecordings] = useState<PvrRecording[]>(() =>
+    StorageService.getRecordings()
+  );
+  const [isPvrModalOpen, setIsPvrModalOpen] = useState<boolean>(false);
+
+  // Phase 3: Parental Controls
+  const [parentalControls, setParentalControls] = useState<ParentalControlsConfig>(() =>
+    StorageService.getParentalControls()
+  );
+  const [unlockedChannelIds, setUnlockedChannelIds] = useState<Set<string>>(new Set());
+  const [isParentalModalOpen, setIsParentalModalOpen] = useState<boolean>(false);
+  const [pendingLockedChannel, setPendingLockedChannel] = useState<Channel | null>(null);
 
   // Modals
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
@@ -120,6 +144,30 @@ export const App: React.FC = () => {
   }, [xtreamAccounts]);
 
   useEffect(() => {
+    StorageService.saveRecordings(recordings);
+  }, [recordings]);
+
+  useEffect(() => {
+    StorageService.saveParentalControls(parentalControls);
+  }, [parentalControls]);
+
+  // Periodic PVR Lifecycle checker (advances scheduled -> recording -> completed)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setRecordings((prev) => {
+        const updated = updateRecordingsLifecycle(prev);
+        const hasChange = updated.some((r, i) => r.status !== prev[i]?.status);
+        if (hasChange) {
+          StorageService.saveRecordings(updated);
+          return updated;
+        }
+        return prev;
+      });
+    }, 20000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
     const prefs = StorageService.getPreferences();
     StorageService.savePreferences({
       ...prefs,
@@ -164,8 +212,25 @@ export const App: React.FC = () => {
     return { current, next };
   };
 
-  // Tune into channel
-  const handleSelectChannel = (channel: Channel) => {
+  // Tune into channel (with Parental Control Lock check & Last Channel memory)
+  const handleSelectChannel = (channel: Channel, bypassLock: boolean = false) => {
+    // Parental Controls Check
+    if (
+      !bypassLock &&
+      parentalControls.enabled &&
+      !unlockedChannelIds.has(channel.id) &&
+      (parentalControls.lockedChannelIds.includes(channel.id) ||
+        parentalControls.lockedCategories.includes(channel.group))
+    ) {
+      setPendingLockedChannel(channel);
+      setIsParentalModalOpen(true);
+      return;
+    }
+
+    if (currentChannel && currentChannel.id !== channel.id) {
+      setLastChannel(currentChannel);
+    }
+
     setCurrentChannel(channel);
 
     const { current } = getProgramsForChannel(channel);
@@ -200,6 +265,43 @@ export const App: React.FC = () => {
         const filtered = prev.filter((item) => item.channelId !== channel.id);
         return [newContinue, ...filtered].slice(0, 10);
       });
+    }
+  };
+
+  // Last Channel Recall (Bell Fibe / Rogers Jump Button)
+  const handleRecallLastChannel = () => {
+    if (lastChannel) {
+      handleSelectChannel(lastChannel);
+    }
+  };
+
+  // Cloud PVR Handlers
+  const handleScheduleRecording = (program: EpgProgram, channel: Channel) => {
+    const newRec = createRecordingFromProgram(program, channel);
+    const updated = StorageService.addRecording(newRec);
+    setRecordings(updated);
+  };
+
+  const handleInstantRecord = () => {
+    if (!currentChannel) return;
+    const { current } = getProgramsForChannel(currentChannel);
+    const newRec = createInstantLiveRecording(currentChannel, current);
+    const updated = StorageService.addRecording(newRec);
+    setRecordings(updated);
+  };
+
+  const handleDeleteRecording = (id: string) => {
+    const updated = StorageService.deleteRecording(id);
+    setRecordings(updated);
+  };
+
+  const handlePlayRecording = (recording: PvrRecording) => {
+    const ch =
+      channels.find((c) => c.id === recording.channelId) ||
+      channels.find((c) => c.channelNumber === recording.channelNumber);
+    if (ch) {
+      handleSelectChannel(ch);
+      setIsPvrModalOpen(false);
     }
   };
 
@@ -487,10 +589,36 @@ export const App: React.FC = () => {
           setIsSportsBarOpen(false);
           return;
         }
+        if (isPvrModalOpen) {
+          setIsPvrModalOpen(false);
+          return;
+        }
+        if (isParentalModalOpen) {
+          setIsParentalModalOpen(false);
+          setPendingLockedChannel(null);
+          return;
+        }
         if (activeTab !== 'home' && activeTab !== 'live') {
           setActiveTab('live');
           return;
         }
+      }
+
+      // 3. Quick Shortcuts: Last Channel Recall (L), Instant Record (R), Sports (S)
+      if (e.key === 'l' || e.key === 'L') {
+        e.preventDefault();
+        handleRecallLastChannel();
+        return;
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        handleInstantRecord();
+        return;
+      }
+      if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        setIsSportsBarOpen((prev) => !prev);
+        return;
       }
 
       // 3. Arrow Keys Navigation
@@ -558,6 +686,8 @@ export const App: React.FC = () => {
         favouritesCount={favourites.length}
         onOpenXtreamModal={() => setIsXtreamModalOpen(true)}
         onOpenSportsBar={() => setIsSportsBarOpen(true)}
+        onOpenPvrModal={() => setIsPvrModalOpen(true)}
+        activeRecordingsCount={recordings.filter((r) => r.status === 'recording').length}
       />
 
       {/* 2. Main Viewport Container */}
@@ -576,6 +706,7 @@ export const App: React.FC = () => {
                 onNavigateTab={setActiveTab}
                 onSelectChannel={handleSelectChannel}
                 onOpenXtreamModal={() => setIsXtreamModalOpen(true)}
+                onOpenPvrModal={() => setIsPvrModalOpen(true)}
               />
             ) : (
               <>
@@ -590,6 +721,10 @@ export const App: React.FC = () => {
                     onOpenSportsBar={() => setIsSportsBarOpen(true)}
                     onNextChannel={handleNextChannel}
                     onPrevChannel={handlePrevChannel}
+                    onRecallLastChannel={handleRecallLastChannel}
+                    lastChannel={lastChannel}
+                    onRecordLive={handleInstantRecord}
+                    isRecording={recordings.some((r) => r.channelId === currentChannel?.id && r.status === 'recording')}
                   />
                 </section>
                 <HomeView
@@ -638,6 +773,10 @@ export const App: React.FC = () => {
                     onOpenSportsBar={() => setIsSportsBarOpen(true)}
                     onNextChannel={handleNextChannel}
                     onPrevChannel={handlePrevChannel}
+                    onRecallLastChannel={handleRecallLastChannel}
+                    lastChannel={lastChannel}
+                    onRecordLive={handleInstantRecord}
+                    isRecording={recordings.some((r) => r.channelId === currentChannel?.id && r.status === 'recording')}
                   />
                 </section>
                 <LiveTvView
@@ -665,6 +804,8 @@ export const App: React.FC = () => {
             onSelectChannel={handleSelectChannel}
             onOpenMappingModal={() => setIsMappingModalOpen(true)}
             unmatchedCount={unmatchedChannels.length}
+            onScheduleRecording={handleScheduleRecording}
+            recordedProgramKeys={new Set(recordings.map((r) => `${r.channelId}_${r.startTime}`))}
           />
         )}
 
@@ -760,6 +901,35 @@ export const App: React.FC = () => {
         channels={channels}
         onSelectChannel={handleSelectChannel}
         currentChannelNumber={currentChannel?.channelNumber}
+      />
+
+      {/* Phase 3: Bell Fibe / Rogers Cloud PVR Recordings Modal */}
+      <PvrRecordingsModal
+        isOpen={isPvrModalOpen}
+        onClose={() => setIsPvrModalOpen(false)}
+        recordings={recordings}
+        onPlayRecording={handlePlayRecording}
+        onDeleteRecording={handleDeleteRecording}
+        onInstantRecordCurrent={handleInstantRecord}
+        currentChannel={currentChannel}
+        timeZone={timeZone}
+      />
+
+      {/* Phase 3: Parental Controls 4-Digit Security PIN Challenge */}
+      <ParentalLockModal
+        isOpen={isParentalModalOpen}
+        onClose={() => {
+          setIsParentalModalOpen(false);
+          setPendingLockedChannel(null);
+        }}
+        targetChannel={pendingLockedChannel}
+        correctPin={parentalControls.pin || '0000'}
+        onSuccess={(channelId) => {
+          setUnlockedChannelIds((prev) => new Set([...prev, channelId]));
+          if (pendingLockedChannel) {
+            handleSelectChannel(pendingLockedChannel, true);
+          }
+        }}
       />
 
       {/* Cable Box Footer / Status Bar */}

@@ -9,6 +9,8 @@ import {
   Link as LinkIcon,
   AlertCircle,
   HelpCircle,
+  Disc,
+  Check,
 } from 'lucide-react';
 import { Channel, EpgProgram, TimeZoneSetting } from '../types';
 import { formatTimeInZone, formatDateInZone } from '../utils/dateUtils';
@@ -20,6 +22,8 @@ interface TvGuideViewProps {
   onSelectChannel: (channel: Channel) => void;
   onOpenMappingModal: () => void;
   unmatchedCount: number;
+  onScheduleRecording?: (program: EpgProgram, channel: Channel) => void;
+  recordedProgramKeys?: Set<string>; // channelId + start
 }
 
 const MINUTE_WIDTH = 5; // 5px per minute = 150px per 30min block
@@ -31,6 +35,8 @@ export const TvGuideView: React.FC<TvGuideViewProps> = ({
   onSelectChannel,
   onOpenMappingModal,
   unmatchedCount,
+  onScheduleRecording,
+  recordedProgramKeys = new Set(),
 }) => {
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const [selectedProgram, setSelectedProgram] = useState<{
@@ -343,6 +349,28 @@ export const TvGuideView: React.FC<TvGuideViewProps> = ({
               <Play className="w-4 h-4 fill-current" />
               <span>Watch {selectedProgram.channel.name}</span>
             </button>
+
+            {onScheduleRecording && (
+              <button
+                onClick={() => {
+                  onScheduleRecording(selectedProgram.program, selectedProgram.channel);
+                  setSelectedProgram(null);
+                }}
+                className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg font-bold text-sm border cable-focus-ring ${
+                  recordedProgramKeys.has(`${selectedProgram.channel.id}_${selectedProgram.program.start}`)
+                    ? 'bg-red-950 text-red-300 border-red-800'
+                    : 'bg-cable-800 hover:bg-cable-700 text-slate-200 border-cable-border'
+                }`}
+              >
+                <Disc className="w-4 h-4 text-red-500 fill-current" />
+                <span>
+                  {recordedProgramKeys.has(`${selectedProgram.channel.id}_${selectedProgram.program.start}`)
+                    ? 'Scheduled to PVR'
+                    : 'Record Show'}
+                </span>
+              </button>
+            )}
+
             <button
               onClick={() => setSelectedProgram(null)}
               className="px-3 py-2 text-xs text-slate-400 hover:text-white rounded-lg hover:bg-cable-800"

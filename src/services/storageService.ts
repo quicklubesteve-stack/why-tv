@@ -7,6 +7,8 @@ import {
   RecentChannel,
   ContinueWatchingItem,
   UserPreferences,
+  PvrRecording,
+  ParentalControlsConfig,
 } from '../types';
 import {
   DEMO_CHANNELS,
@@ -27,6 +29,8 @@ const KEYS = {
   PREFERENCES: 'whytv_preferences_v1',
   XTREAM_ACCOUNTS: 'whytv_xtream_accounts_v1',
   MULTIVIEW: 'whytv_multiview_v1',
+  RECORDINGS: 'whytv_recordings_v1',
+  PARENTAL: 'whytv_parental_v1',
 };
 
 const DEFAULT_PREFERENCES: UserPreferences = {
@@ -302,6 +306,114 @@ export class StorageService {
 
   static saveMultiViewIds(ids: string[]): void {
     localStorage.setItem(KEYS.MULTIVIEW, JSON.stringify(ids.slice(0, 4)));
+  }
+
+  /**
+   * Cloud PVR Recordings
+   */
+  static getRecordings(): PvrRecording[] {
+    try {
+      const data = localStorage.getItem(KEYS.RECORDINGS);
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.error('Failed to load recordings', e);
+    }
+    // Return sample demo recordings so user has instant data
+    const now = Date.now();
+    return [
+      {
+        id: 'rec_demo_1',
+        channelId: DEMO_CHANNELS[0].id,
+        channelNumber: DEMO_CHANNELS[0].channelNumber,
+        channelName: DEMO_CHANNELS[0].name,
+        channelLogo: DEMO_CHANNELS[0].logo,
+        programTitle: 'Global News Hour: Evening Edition',
+        programDescription: 'Comprehensive live coverage of international and national headlines.',
+        startTime: new Date(now - 3 * 3600 * 1000).toISOString(),
+        endTime: new Date(now - 2 * 3600 * 1000).toISOString(),
+        durationMinutes: 60,
+        status: 'completed',
+        sizeMb: 1450,
+        createdAt: new Date(now - 3 * 3600 * 1000).toISOString(),
+      },
+      {
+        id: 'rec_demo_2',
+        channelId: DEMO_CHANNELS[2].id,
+        channelNumber: DEMO_CHANNELS[2].channelNumber,
+        channelName: DEMO_CHANNELS[2].name,
+        channelLogo: DEMO_CHANNELS[2].logo,
+        programTitle: 'NHL Prime Time: Leafs vs Canadiens',
+        programDescription: 'Saturday night hockey showdown live from Scotiabank Arena.',
+        startTime: new Date(now - 90 * 60 * 1000).toISOString(),
+        endTime: new Date(now + 60 * 60 * 1000).toISOString(),
+        durationMinutes: 150,
+        status: 'recording',
+        sizeMb: 3600,
+        createdAt: new Date(now - 90 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'rec_demo_3',
+        channelId: DEMO_CHANNELS[1].id,
+        channelNumber: DEMO_CHANNELS[1].channelNumber,
+        channelName: DEMO_CHANNELS[1].name,
+        channelLogo: DEMO_CHANNELS[1].logo,
+        programTitle: 'Night at the Cinema: Sci-Fi Premiere',
+        programDescription: 'Critically acclaimed modern science fiction thriller feature.',
+        startTime: new Date(now + 4 * 3600 * 1000).toISOString(),
+        endTime: new Date(now + 6 * 3600 * 1000).toISOString(),
+        durationMinutes: 120,
+        status: 'scheduled',
+        sizeMb: 2900,
+        createdAt: new Date(now).toISOString(),
+      },
+    ];
+  }
+
+  static saveRecordings(recordings: PvrRecording[]): void {
+    localStorage.setItem(KEYS.RECORDINGS, JSON.stringify(recordings));
+  }
+
+  static addRecording(recording: PvrRecording): PvrRecording[] {
+    const list = this.getRecordings();
+    // Prevent duplicate recording of identical program and start time
+    const exists = list.some(
+      (r) => r.channelId === recording.channelId && r.startTime === recording.startTime
+    );
+    if (!exists) {
+      const updated = [recording, ...list];
+      this.saveRecordings(updated);
+      return updated;
+    }
+    return list;
+  }
+
+  static deleteRecording(id: string): PvrRecording[] {
+    const list = this.getRecordings();
+    const updated = list.filter((r) => r.id !== id);
+    this.saveRecordings(updated);
+    return updated;
+  }
+
+  /**
+   * Parental Controls & Channel PIN Lock
+   */
+  static getParentalControls(): ParentalControlsConfig {
+    try {
+      const data = localStorage.getItem(KEYS.PARENTAL);
+      if (data) return JSON.parse(data);
+    } catch (e) {
+      console.error('Failed to load parental controls', e);
+    }
+    return {
+      enabled: false,
+      pin: '0000',
+      lockedChannelIds: [],
+      lockedCategories: ['Adult', 'Late Night'],
+    };
+  }
+
+  static saveParentalControls(config: ParentalControlsConfig): void {
+    localStorage.setItem(KEYS.PARENTAL, JSON.stringify(config));
   }
 
   /**

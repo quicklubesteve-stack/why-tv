@@ -20,6 +20,10 @@ import {
   Check,
   Clock,
   Trophy,
+  Disc,
+  History,
+  PictureInPicture,
+  Languages,
 } from 'lucide-react';
 import { Channel, EpgProgram, PlaybackState, TimeZoneSetting, StreamDiagnostics } from '../types';
 import { formatTimeInZone, getProgramProgress } from '../utils/dateUtils';
@@ -42,6 +46,10 @@ interface PlayerProps {
   onClose?: () => void;
   onNextChannel?: () => void;
   onPrevChannel?: () => void;
+  onRecallLastChannel?: () => void;
+  lastChannel?: Channel | null;
+  onRecordLive?: () => void;
+  isRecording?: boolean;
 }
 
 export const Player: React.FC<PlayerProps> = ({
@@ -55,9 +63,19 @@ export const Player: React.FC<PlayerProps> = ({
   onClose,
   onNextChannel,
   onPrevChannel,
+  onRecallLastChannel,
+  lastChannel,
+  onRecordLive,
+  isRecording = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [audioTracks, setAudioTracks] = useState<{ id: number; name: string; lang?: string }[]>([]);
+  const [selectedAudioTrack, setSelectedAudioTrack] = useState<number>(-1);
+  const [subtitleTracks, setSubtitleTracks] = useState<{ id: number; name: string; lang?: string }[]>([]);
+  const [selectedSubtitleTrack, setSelectedSubtitleTrack] = useState<number>(-1);
+  const [showTrackMenu, setShowTrackMenu] = useState<boolean>(false);
+  const [isPipAvailable, setIsPipAvailable] = useState<boolean>(false);
   const hlsRef = useRef<Hls | null>(null);
 
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
@@ -228,7 +246,28 @@ export const Player: React.FC<PlayerProps> = ({
       });
 
       hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, (_, data) => {
-        setAvailableSubtitles(data.subtitleTracks.length);
+        setAvailableSubtitles(data.subtitleTracks?.length || 0);
+        if (data.subtitleTracks && data.subtitleTracks.length > 0) {
+          setSubtitleTracks(
+            data.subtitleTracks.map((t, idx) => ({
+              id: idx,
+              name: t.name || `Subtitles ${idx + 1}`,
+              lang: t.lang || '',
+            }))
+          );
+        }
+      });
+
+      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, (_, data) => {
+        if (data.audioTracks && data.audioTracks.length > 0) {
+          setAudioTracks(
+            data.audioTracks.map((t, idx) => ({
+              id: idx,
+              name: t.name || `Audio ${idx + 1}`,
+              lang: t.lang || '',
+            }))
+          );
+        }
       });
 
       hls.on(Hls.Events.ERROR, (_, data) => {
@@ -381,6 +420,41 @@ export const Player: React.FC<PlayerProps> = ({
     const nextState = !captionsActive;
     setCaptionsActive(nextState);
     hlsRef.current.subtitleTrack = nextState ? 0 : -1;
+    pingOsd();
+  };
+
+  useEffect(() => {
+    if (typeof document !== 'undefined' && 'pictureInPictureEnabled' in document) {
+      setIsPipAvailable(document.pictureInPictureEnabled);
+    }
+  }, []);
+
+  const handleSwitchAudio = (trackId: number) => {
+    if (!hlsRef.current) return;
+    hlsRef.current.audioTrack = trackId;
+    setSelectedAudioTrack(trackId);
+    pingOsd();
+  };
+
+  const handleSwitchSubtitle = (trackId: number) => {
+    if (!hlsRef.current) return;
+    hlsRef.current.subtitleTrack = trackId;
+    setSelectedSubtitleTrack(trackId);
+    setCaptionsActive(trackId >= 0);
+    pingOsd();
+  };
+
+  const togglePiP = async () => {
+    if (!videoRef.current) return;
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else if (document.pictureInPictureEnabled) {
+        await videoRef.current.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.warn('Picture-in-Picture error:', err);
+    }
     pingOsd();
   };
 
@@ -784,6 +858,34 @@ export const Player: React.FC<PlayerProps> = ({
                 </button>
               )}
 
+              {/* Last Channel Recall (Bell Fibe / Rogers Jump button) */}
+              {onRecallLastChannel && lastChannel && (
+                <button
+                  onClick={onRecallLastChannel}
+                  className="flex items-center space-x-1 px-2.5 py-1.5 rounded bg-cable-800 hover:bg-cable-700 text-xs font-mono font-bold text-amber-400 border border-neutral-700 cable-focus-ring"
+                  title={`Recall last channel: CH ${lastChannel.channelNumber} ${lastChannel.name} (Key: L)`}
+                >
+                  <History className="w-3.5 h-3.5" />
+                  <span>Last {lastChannel.channelNumber}</span>
+                </button>
+              )}
+
+              {/* Instant Record Button */}
+              {onRecordLive && (
+                <button
+                  onClick={onRecordLive}
+                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded text-xs font-mono font-bold border cable-focus-ring ${
+                    isRecording
+                      ? 'bg-red-950 text-red-300 border-red-800 animate-pulse'
+                      : 'bg-neutral-800 hover:bg-neutral-700 text-slate-300 border-neutral-700'
+                  }`}
+                  title="Record current live broadcast to Cloud PVR (Key: R)"
+                >
+                  <Disc className={`w-3.5 h-3.5 ${isRecording ? 'text-red-400 animate-spin' : 'text-red-500'}`} />
+                  <span>{isRecording ? 'REC' : 'Record'}</span>
+                </button>
+              )}
+
               {/* Volume & Mute */}
               <div className="flex items-center space-x-2 ml-2 pl-3 border-l border-neutral-700">
                 <button
@@ -806,7 +908,7 @@ export const Player: React.FC<PlayerProps> = ({
               </div>
             </div>
 
-            {/* Right: Aspect, Captions, Fullscreen */}
+            {/* Right: Aspect, Audio/Subs, PiP, Fullscreen */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={toggleAspectRatio}
@@ -815,6 +917,90 @@ export const Player: React.FC<PlayerProps> = ({
               >
                 Aspect: {aspectRatio}
               </button>
+
+              {/* Multi-Track Audio & Subtitle Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowTrackMenu(!showTrackMenu)}
+                  className={`p-2 rounded border cable-focus-ring ${
+                    showTrackMenu || selectedAudioTrack >= 0 || captionsActive
+                      ? 'bg-amber-400 text-neutral-950 border-amber-300 font-bold'
+                      : 'bg-neutral-800 text-slate-300 border-neutral-700 hover:bg-neutral-700'
+                  }`}
+                  title="Audio & Subtitles Tracks"
+                >
+                  <Languages className="w-4 h-4" />
+                </button>
+
+                {showTrackMenu && (
+                  <div className="absolute bottom-12 right-0 w-64 bg-neutral-950/95 backdrop-blur-md border border-neutral-700 p-3 rounded-xl shadow-2xl text-xs space-y-3 z-50">
+                    <div className="font-bold text-amber-400 flex items-center justify-between border-b border-neutral-800 pb-1.5">
+                      <span>Audio & Subtitles</span>
+                      <button onClick={() => setShowTrackMenu(false)} className="text-slate-400 hover:text-white">✕</button>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] uppercase font-mono text-slate-400 block mb-1">Audio Tracks</span>
+                      {audioTracks.length === 0 ? (
+                        <span className="text-[11px] text-slate-500 italic">Default Stereo (Auto)</span>
+                      ) : (
+                        <div className="space-y-1">
+                          {audioTracks.map((tr) => (
+                            <button
+                              key={tr.id}
+                              onClick={() => handleSwitchAudio(tr.id)}
+                              className={`w-full text-left px-2 py-1 rounded text-[11px] flex items-center justify-between ${
+                                selectedAudioTrack === tr.id ? 'bg-amber-400 text-black font-bold' : 'hover:bg-neutral-800 text-slate-200'
+                              }`}
+                            >
+                              <span>{tr.name}</span>
+                              {selectedAudioTrack === tr.id && <Check className="w-3 h-3" />}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2 border-t border-neutral-800">
+                      <span className="text-[10px] uppercase font-mono text-slate-400 block mb-1">Subtitles / Closed Captions</span>
+                      <div className="space-y-1">
+                        <button
+                          onClick={() => handleSwitchSubtitle(-1)}
+                          className={`w-full text-left px-2 py-1 rounded text-[11px] flex items-center justify-between ${
+                            selectedSubtitleTrack === -1 ? 'bg-amber-400 text-black font-bold' : 'hover:bg-neutral-800 text-slate-200'
+                          }`}
+                        >
+                          <span>Off</span>
+                          {selectedSubtitleTrack === -1 && <Check className="w-3 h-3" />}
+                        </button>
+                        {subtitleTracks.map((sub) => (
+                          <button
+                            key={sub.id}
+                            onClick={() => handleSwitchSubtitle(sub.id)}
+                            className={`w-full text-left px-2 py-1 rounded text-[11px] flex items-center justify-between ${
+                              selectedSubtitleTrack === sub.id ? 'bg-amber-400 text-black font-bold' : 'hover:bg-neutral-800 text-slate-200'
+                            }`}
+                          >
+                            <span>{sub.name}</span>
+                            {selectedSubtitleTrack === sub.id && <Check className="w-3 h-3" />}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Picture-in-Picture Button */}
+              {isPipAvailable && (
+                <button
+                  onClick={togglePiP}
+                  className="p-2 rounded bg-neutral-800 hover:bg-neutral-700 text-slate-300 hover:text-white border border-neutral-700 cable-focus-ring"
+                  title="Picture-in-Picture (Key: P)"
+                >
+                  <PictureInPicture className="w-4 h-4" />
+                </button>
+              )}
 
               {availableSubtitles > 0 && (
                 <button
