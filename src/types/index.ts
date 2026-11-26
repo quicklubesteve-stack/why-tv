@@ -113,7 +113,7 @@ export interface UserPreferences {
   uiTheme: UiThemeMode;
   volume: number;
   isMuted: boolean;
-  activeTab: 'home' | 'live' | 'guide' | 'multiview' | 'favourites' | 'search' | 'settings';
+  activeTab: 'home' | 'live' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings';
   selectedCategory: string;
   hasWarnedSharedDevice?: boolean;
   corsProxyEnabled?: boolean;
@@ -238,4 +238,60 @@ export interface LiveSearchResult {
   category?: string;
   startTime?: string;
   endTime?: string;
+}
+
+// ---------------------------------------------------------
+// PHASE 6: VOD, SERIES BINGE ENGINE & SOUND MODES
+// ---------------------------------------------------------
+export type VodType = 'movie' | 'series';
+
+export interface VodEpisode {
+  id: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  title: string;
+  durationMinutes: number;
+  description: string;
+  streamUrl: string;
+  thumbnail?: string;
+}
+
+export interface VodItem {
+  id: string;
+  type: VodType;
+  title: string;
+  category: string;
+  releaseYear: number;
+  rating: string; // e.g. "PG-13", "TV-MA", "TV-14", "PG", "G"
+  durationMinutes?: number; // for movies
+  totalSeasons?: number;   // for series
+  description: string;
+  poster: string;
+  backdrop?: string;
+  director?: string;
+  cast?: string[];
+  streamUrl?: string; // for movies
+  episodes?: VodEpisode[]; // for series
+  featured?: boolean;
+}
+
+export interface VodPlaybackProgress {
+  vodId: string;
+  episodeId?: string;
+  positionSec: number;
+  durationSec: number;
+  percent: number;
+  lastWatchedIso: string;
+  completed: boolean;
+}
+
+export type SoundMode = 'standard' | 'stadium' | 'dialogue' | 'cinema';
+
+export interface SoundModeProfile {
+  id: SoundMode;
+  label: string;
+  description: string;
+  bassGain: number;   // dB boost for low frequencies
+  midGain: number;    // dB boost for commentary/dialogue (1kHz - 3kHz)
+  trebleGain: number; // dB boost for high frequencies
 }

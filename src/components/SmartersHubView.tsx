@@ -25,7 +25,7 @@ interface SmartersHubViewProps {
   favouritesCount: number;
   xtreamAccount?: XtreamAccountInfo;
   timeZone: TimeZoneSetting;
-  onNavigateTab: (tab: 'home' | 'live' | 'guide' | 'multiview' | 'favourites' | 'search' | 'settings') => void;
+  onNavigateTab: (tab: 'home' | 'live' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings') => void;
   onSelectChannel: (channel: Channel) => void;
   onOpenXtreamModal: () => void;
   onOpenPvrModal?: () => void;
@@ -191,7 +191,7 @@ export const SmartersHubView: React.FC<SmartersHubViewProps> = ({
 
         {/* Tile 4: MOVIES & FAST STREAMS */}
         <div
-          onClick={() => onNavigateTab('live')}
+          onClick={() => onNavigateTab('ondemand')}
           role="button"
           tabIndex={0}
           className="group relative p-6 rounded-2xl bg-gradient-to-br from-rose-950/40 via-cable-900 to-cable-950 border border-rose-900/60 hover:border-amber-400 cursor-pointer shadow-2xl transition-all duration-200 cable-focus-ring flex flex-col justify-between h-48 overflow-hidden"

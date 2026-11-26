@@ -13,6 +13,8 @@ import {
   PresetProvider,
   PvrRecording,
   ParentalControlsConfig,
+  VodItem,
+  VodEpisode,
 } from './types';
 import { StorageService } from './services/storageService';
 import { parseM3U } from './utils/m3uParser';
@@ -23,6 +25,7 @@ import { HomeView } from './components/HomeView';
 import { LiveTvView } from './components/LiveTvView';
 import { TiviMateView } from './components/TiviMateView';
 import { SmartersHubView } from './components/SmartersHubView';
+import { VodHubView } from './components/VodHubView';
 import { TvGuideView } from './components/TvGuideView';
 import { MultiViewScreen } from './components/MultiViewScreen';
 import { FavouritesView } from './components/FavouritesView';
@@ -41,6 +44,7 @@ import {
   createInstantLiveRecording,
   updateRecordingsLifecycle,
 } from './utils/pvrUtils';
+import { getNextEpisode } from './utils/vodUtils';
 
 export const App: React.FC = () => {
   // Global State
@@ -67,11 +71,15 @@ export const App: React.FC = () => {
     () => StorageService.getPreferences().uiTheme || 'tivimate'
   );
   const [activeTab, setActiveTab] = useState<
-    'home' | 'live' | 'guide' | 'multiview' | 'favourites' | 'search' | 'settings'
-  >(() => StorageService.getPreferences().activeTab || 'live');
+    'home' | 'live' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings'
+  >(() => (StorageService.getPreferences().activeTab as any) || 'live');
   const [corsProxyEnabled, setCorsProxyEnabled] = useState<boolean>(
     () => StorageService.getPreferences().corsProxyEnabled || false
   );
+
+  // Phase 6: VOD On-Demand Playback State
+  const [activeVodItem, setActiveVodItem] = useState<VodItem | null>(null);
+  const [activeVodEpisode, setActiveVodEpisode] = useState<VodEpisode | null>(null);
 
   // Xtream Account
   const [xtreamAccounts, setXtreamAccounts] = useState<any[]>(() =>
@@ -233,6 +241,10 @@ export const App: React.FC = () => {
       setLastChannel(currentChannel);
     }
 
+    // Clear any active VOD streaming when selecting a live TV channel
+    setActiveVodItem(null);
+    setActiveVodEpisode(null);
+
     setCurrentChannel(channel);
 
     const { current } = getProgramsForChannel(channel);
@@ -274,6 +286,21 @@ export const App: React.FC = () => {
   const handleRecallLastChannel = () => {
     if (lastChannel) {
       handleSelectChannel(lastChannel);
+    }
+  };
+
+  // Phase 6: VOD Entertainment Hub Handlers
+  const handlePlayVod = (vod: VodItem, episode?: VodEpisode) => {
+    setActiveVodItem(vod);
+    setActiveVodEpisode(episode || null);
+    setActiveTab('ondemand');
+  };
+
+  const handlePlayNextEpisode = () => {
+    if (!activeVodItem || !activeVodEpisode) return;
+    const nextEp = getNextEpisode(activeVodItem, activeVodEpisode.id);
+    if (nextEp) {
+      setActiveVodEpisode(nextEp);
     }
   };
 
@@ -725,6 +752,9 @@ export const App: React.FC = () => {
                 <section className="space-y-3">
                   <Player
                     channel={currentChannel}
+                    vodItem={activeVodItem}
+                    vodEpisode={activeVodEpisode}
+                    onPlayNextEpisode={handlePlayNextEpisode}
                     currentProgram={currentPlayingProgram}
                     nextProgram={nextPlayingProgram}
                     timeZone={timeZone}
@@ -777,6 +807,9 @@ export const App: React.FC = () => {
                 <section className="space-y-3">
                   <Player
                     channel={currentChannel}
+                    vodItem={activeVodItem}
+                    vodEpisode={activeVodEpisode}
+                    onPlayNextEpisode={handlePlayNextEpisode}
                     currentProgram={currentPlayingProgram}
                     nextProgram={nextPlayingProgram}
                     timeZone={timeZone}
@@ -819,6 +852,60 @@ export const App: React.FC = () => {
             onScheduleRecording={handleScheduleRecording}
             recordedProgramKeys={new Set(recordings.map((r) => `${r.channelId}_${r.startTime}`))}
           />
+        )}
+
+        {/* ON-DEMAND ENTERTAINMENT HUB TAB (Netflix & IPTV Smarters Pro VOD) */}
+        {activeTab === 'ondemand' && (
+          <section className="space-y-4">
+            {activeVodItem && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+                      Now Streaming: <span className="text-amber-400 font-semibold">{activeVodItem.title}</span>
+                      {activeVodEpisode && (
+                        <span className="text-slate-400 font-normal ml-2">
+                          (S{activeVodEpisode.seasonNumber}:E{activeVodEpisode.episodeNumber} - {activeVodEpisode.title})
+                        </span>
+                      )}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setActiveVodItem(null);
+                      setActiveVodEpisode(null);
+                    }}
+                    className="text-xs text-slate-400 hover:text-white bg-cable-800 hover:bg-cable-700 px-3 py-1 rounded transition border border-cable-border/60"
+                  >
+                    Close Player
+                  </button>
+                </div>
+                <Player
+                  channel={null}
+                  vodItem={activeVodItem}
+                  vodEpisode={activeVodEpisode}
+                  onPlayNextEpisode={handlePlayNextEpisode}
+                  currentProgram={undefined}
+                  nextProgram={undefined}
+                  timeZone={timeZone}
+                  allChannels={channels}
+                  onSelectChannel={handleSelectChannel}
+                  onOpenSportsBar={() => setIsSportsBarOpen(true)}
+                  onNextChannel={handleNextChannel}
+                  onPrevChannel={handlePrevChannel}
+                  onRecallLastChannel={handleRecallLastChannel}
+                  lastChannel={lastChannel}
+                  onRecordLive={handleInstantRecord}
+                  isRecording={false}
+                />
+              </div>
+            )}
+            <VodHubView
+              onPlayVod={handlePlayVod}
+              onOpenXtreamModal={() => setIsXtreamModalOpen(true)}
+            />
+          </section>
         )}
 
         {/* MULTI-VIEW SCREEN (2x2 Quad Screen / Split Screen) */}

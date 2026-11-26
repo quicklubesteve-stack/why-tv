@@ -23,7 +23,7 @@ npm run dev
 npm run build
 npm run preview
 
-# Run the 100% verified test suite (302 tests across 16 suites):
+# Run the 100% verified test suite (348 tests across 18 suites):
 npx tsx test-suite.mjs
 ```
 
@@ -82,7 +82,30 @@ You can switch between layouts anytime using the **UI Theme Switcher** in the to
 - Direct launcher for the **Sports Companion Bar** to track scores alongside multi-game streams.
 - Swap channels on any slot or maximize to full screen.
 
-### 4. Live Content & Sports Search Engine (Phase 4)
+### 4. Netflix & IPTV Smarters Pro On-Demand Entertainment Hub (Phase 6)
+- **Dedicated "On Demand" Tab**: Cinematic Netflix-style billboard hero showcasing featured titles with trailer synopsis, cast, director, rating, and 1-click play.
+- **Movies & TV Series Carousels**: Browse curated blockbusters (*Tears of Steel*, *Sintel*, *Big Buck Bunny*, *Cyberpunk 2088*, *The Alpine Descent*, *Midnight Noir*) and multi-episode TV series (*Gridiron Dynasties: The Championship Road*, *Orbit Station ISS*, *Forensic Files*).
+- **Interactive Episode Picker & Binge Engine**: Browse season episodes with individual runtimes and plot synopses; automatic "Next Episode" prompt and seamless binge progression.
+- **Resume Watching & Progress Tracking**: Automatically saves playback timestamps per title and episode to local storage; displays visual progress bars and resume points.
+- **VOD Scrub Bar**: Precise seeking, 10-second skip backward (`J` / `◀`), 30-second skip forward (`L` / `▶`), and formatted elapsed/total runtime indicators.
+
+### 5. TV Guide Prime-Time Quick Jump & Category Filters (Phase 6)
+- **Timeline Quick Jump Buttons**:
+  - `NOW`: Instantly scroll the timeline back to the current live broadcast block.
+  - `+2 HOURS`: Jump ahead two hours to check near-future schedules.
+  - `🌙 PRIME TIME (8 PM)`: Smart anchor targeting 8:00 PM tonight (or tomorrow if currently past 8:30 PM).
+  - `TOMORROW`: Fast-forward to tomorrow morning's programming grid.
+- **EPG Category Filter Pills**: 1-click filter pills (`All`, `Sports`, `News`, `Movies`, `Kids`, `Local`) to isolate channels within the timeline guide.
+- **Expanded 30-Hour Timeline Grid**: Clean continuous time blocks spanning across prime-time and next-day schedules.
+
+### 6. Audio Sound Mode Equalizer Presets (Phase 6)
+- **Dedicated Sound Mode Switcher**: Quick-access audio menu in the video player overlay to adapt acoustic profiles:
+  - 🔊 **Standard**: Flat studio reference mix for general TV viewing.
+  - 🏟️ **Stadium Mode**: Boosted deep sub-bass (+6.5 dB) and treble (+3.0 dB) for roaring live sports crowd atmospheres and cheering.
+  - 🎙️ **Clear Commentary**: Vocal midrange boost (+7.0 dB at 1kHz–3kHz) to cut through background noise and elevate announcer commentary clarity.
+  - 🎬 **Cinema Boost**: Expanded dynamic range with punchy low-end (+5.0 dB) and crisp highs (+4.5 dB) for movies and series.
+
+### 7. Live Content & Sports Search Engine (Phase 4)
 - **Semantic Live Search**: Search for keywords like **"football"**, **"hockey"**, **"soccer"**, **"chiefs"**, **"leafs"**, or **"news"** to see which channels are broadcasting live games right now.
 - **Instant Match & Game Cards**: Displays live scores (e.g. `KC 27 - BUF 24`), current game clock (`4th 02:18`), broadcaster name, and stats snippets.
 - **1-Click "Watch Game"**: Clicking any live match or program instantly tunes the player directly into that channel.

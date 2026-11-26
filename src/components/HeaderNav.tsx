@@ -13,13 +13,14 @@ import {
   Server,
   Trophy,
   HardDrive,
+  Film,
 } from 'lucide-react';
 import { TimeZoneSetting, UiThemeMode } from '../types';
 import { formatTimeInZone } from '../utils/dateUtils';
 
 interface HeaderNavProps {
-  activeTab: 'home' | 'live' | 'guide' | 'multiview' | 'favourites' | 'search' | 'settings';
-  setActiveTab: (tab: 'home' | 'live' | 'guide' | 'multiview' | 'favourites' | 'search' | 'settings') => void;
+  activeTab: 'home' | 'live' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings';
+  setActiveTab: (tab: 'home' | 'live' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings') => void;
   uiTheme: UiThemeMode;
   onSetUiTheme: (theme: UiThemeMode) => void;
   timeZone: TimeZoneSetting;
@@ -68,7 +69,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   }, [timeZone]);
 
   const navItems: {
-    id: 'home' | 'live' | 'guide' | 'multiview' | 'favourites' | 'search' | 'settings';
+    id: 'home' | 'live' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings';
     label: string;
     icon: React.ComponentType<{ className?: string }>;
     badge?: number;
@@ -76,6 +77,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     { id: 'home', label: 'Home', icon: Home },
     { id: 'live', label: 'Live TV', icon: Tv },
     { id: 'guide', label: 'TV Guide', icon: Calendar },
+    { id: 'ondemand', label: 'On Demand', icon: Film },
     { id: 'multiview', label: 'Multi-View', icon: Grid },
     { id: 'favourites', label: 'Favourites', icon: Star, badge: favouritesCount > 0 ? favouritesCount : undefined },
     { id: 'search', label: 'Search', icon: Search },

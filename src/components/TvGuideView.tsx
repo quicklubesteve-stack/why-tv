@@ -39,18 +39,33 @@ export const TvGuideView: React.FC<TvGuideViewProps> = ({
   recordedProgramKeys = new Set(),
 }) => {
   const gridContainerRef = useRef<HTMLDivElement>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedProgram, setSelectedProgram] = useState<{
     program: EpgProgram;
     channel: Channel;
   } | null>(null);
 
-  // Define guide timeline range: 2 hours ago to 14 hours ahead, snapped to 30 min boundaries
+  // Filter channels by selected category
+  const filteredChannels = useMemo(() => {
+    if (selectedCategory === 'All') return channels;
+    return channels.filter((c) => (c.group || '').toLowerCase() === selectedCategory.toLowerCase());
+  }, [channels, selectedCategory]);
+
+  const categories = useMemo(() => {
+    const list = ['All', 'Sports', 'News', 'Movies', 'Kids', 'Local'];
+    return list.map((cat) => {
+      const count = cat === 'All' ? channels.length : channels.filter((c) => (c.group || '').toLowerCase() === cat.toLowerCase()).length;
+      return { name: cat, count };
+    });
+  }, [channels]);
+
+  // Define guide timeline range: 2 hours ago to 28 hours ahead, snapped to 30 min boundaries
   const { startTime, endTime, timeSlots } = useMemo(() => {
     const now = new Date();
     const start = new Date(now.getTime() - 2 * 60 * 60 * 1000);
     start.setMinutes(start.getMinutes() < 30 ? 0 : 30, 0, 0);
 
-    const end = new Date(start.getTime() + 16 * 60 * 60 * 1000);
+    const end = new Date(start.getTime() + 30 * 60 * 60 * 1000);
 
     const slots: Date[] = [];
     let cur = new Date(start);
@@ -62,13 +77,37 @@ export const TvGuideView: React.FC<TvGuideViewProps> = ({
     return { startTime: start, endTime: end, timeSlots: slots };
   }, []);
 
-  // Jump grid scroll directly to "Now"
-  const scrollToNow = () => {
+  const scrollToTimestamp = (targetMs: number) => {
     if (!gridContainerRef.current) return;
-    const now = Date.now();
-    const diffMinutes = Math.max(0, (now - startTime.getTime()) / (60 * 1000));
+    const diffMinutes = Math.max(0, (targetMs - startTime.getTime()) / (60 * 1000));
     const targetScroll = Math.max(0, diffMinutes * MINUTE_WIDTH - 250);
     gridContainerRef.current.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  };
+
+  // Jump grid scroll directly to "Now"
+  const scrollToNow = () => {
+    scrollToTimestamp(Date.now());
+  };
+
+  // Jump grid scroll +2 Hours
+  const scrollToPlusTwoHours = () => {
+    scrollToTimestamp(Date.now() + 2 * 60 * 60 * 1000);
+  };
+
+  // Jump to Prime Time (8:00 PM)
+  const scrollToPrimeTime = () => {
+    const target = new Date();
+    target.setHours(20, 0, 0, 0);
+    if (Date.now() > target.getTime() + 30 * 60 * 1000) {
+      // If already past 8:30 PM, jump to tomorrow 8:00 PM
+      target.setDate(target.getDate() + 1);
+    }
+    scrollToTimestamp(target.getTime());
+  };
+
+  // Jump to Tomorrow (+24 Hours)
+  const scrollToTomorrow = () => {
+    scrollToTimestamp(Date.now() + 24 * 60 * 60 * 1000);
   };
 
   useEffect(() => {
@@ -101,32 +140,80 @@ export const TvGuideView: React.FC<TvGuideViewProps> = ({
 
   return (
     <div className="space-y-4 pb-12">
-      {/* Top Controls: "Now" button, time window info, unmatched alert */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-cable-900 border border-cable-border p-3.5 rounded-xl shadow">
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={scrollToNow}
-            className="flex items-center space-x-2 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black rounded-lg shadow-cable-focus transition text-sm cable-focus-ring"
-          >
-            <Clock className="w-4 h-4" />
-            <span>JUMP TO NOW</span>
-          </button>
+      {/* Top Controls: "Now" button, Quick Jump Time navigation, category pills */}
+      <div className="flex flex-col gap-3 bg-cable-900 border border-cable-border p-3.5 rounded-2xl shadow">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Quick Time Jump Toolbar */}
+          <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar">
+            <button
+              onClick={scrollToNow}
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-amber-400 hover:bg-amber-300 text-neutral-950 font-black rounded-lg shadow-cable-focus transition text-xs cable-focus-ring shrink-0"
+              title="Jump directly to current time"
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>NOW</span>
+            </button>
 
-          <span className="text-xs sm:text-sm font-semibold text-slate-300">
-            {formatDateInZone(new Date(), timeZone)} • {formatTimeInZone(new Date(), timeZone)}
-          </span>
+            <button
+              onClick={scrollToPlusTwoHours}
+              className="px-3 py-2 bg-cable-800 hover:bg-cable-700 text-slate-200 hover:text-white font-bold rounded-lg border border-cable-border text-xs transition cable-focus-ring shrink-0"
+              title="Fast forward 2 hours"
+            >
+              +2 HOURS
+            </button>
+
+            <button
+              onClick={scrollToPrimeTime}
+              className="px-3 py-2 bg-purple-950 hover:bg-purple-900 text-purple-200 border border-purple-800 font-bold rounded-lg text-xs transition cable-focus-ring shrink-0 flex items-center space-x-1"
+              title="Jump to Prime Time evening lineup (8:00 PM)"
+            >
+              <span>🌙 PRIME TIME (8 PM)</span>
+            </button>
+
+            <button
+              onClick={scrollToTomorrow}
+              className="px-3 py-2 bg-cable-800 hover:bg-cable-700 text-slate-200 hover:text-white font-bold rounded-lg border border-cable-border text-xs transition cable-focus-ring shrink-0"
+              title="Jump 24 hours ahead"
+            >
+              TOMORROW
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-3 self-end sm:self-center">
+            <span className="text-xs font-semibold text-slate-300">
+              {formatDateInZone(new Date(), timeZone)} • {formatTimeInZone(new Date(), timeZone)}
+            </span>
+
+            {/* Unmatched Channels Banner Link */}
+            {unmatchedCount > 0 && (
+              <button
+                onClick={onOpenMappingModal}
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg bg-cable-800 hover:bg-cable-700 text-amber-300 hover:text-amber-200 border border-amber-500/40 text-xs font-semibold cable-focus-ring"
+              >
+                <LinkIcon className="w-3.5 h-3.5 text-amber-400" />
+                <span>{unmatchedCount} Unmatched</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Unmatched Channels Banner Link */}
-        {unmatchedCount > 0 && (
-          <button
-            onClick={onOpenMappingModal}
-            className="flex items-center space-x-2 px-3.5 py-1.5 rounded-lg bg-cable-800 hover:bg-cable-700 text-amber-300 hover:text-amber-200 border border-amber-500/40 text-xs font-semibold cable-focus-ring"
-          >
-            <LinkIcon className="w-3.5 h-3.5 text-amber-400" />
-            <span>{unmatchedCount} Unmatched Channels (Manual Match)</span>
-          </button>
-        )}
+        {/* Category Filter Pills (Sports, News, Movies, Kids, Local) */}
+        <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar pt-1 border-t border-cable-border/60">
+          <span className="text-[11px] font-mono text-slate-400 uppercase shrink-0">Filter:</span>
+          {categories.map((cat) => (
+            <button
+              key={cat.name}
+              onClick={() => setSelectedCategory(cat.name)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition shrink-0 cable-focus-ring ${
+                selectedCategory === cat.name
+                  ? 'bg-amber-400 text-neutral-950 font-bold shadow-cable-focus'
+                  : 'bg-cable-950 text-slate-300 hover:bg-cable-800 hover:text-white border border-cable-border/60'
+              }`}
+            >
+              {cat.name} ({cat.count})
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Cable Grid EPG */}
@@ -138,13 +225,13 @@ export const TvGuideView: React.FC<TvGuideViewProps> = ({
             <div className="h-12 border-b border-cable-border p-3 flex items-center justify-between bg-cable-950 font-bold text-xs uppercase text-slate-400 font-mono tracking-wider">
               <span>Channel</span>
               <span className="text-[10px] bg-cable-800 px-1.5 py-0.5 rounded text-amber-400">
-                {channels.length} Total
+                {filteredChannels.length} Shown
               </span>
             </div>
 
             {/* Channel rows */}
             <div className="divide-y divide-cable-border/60">
-              {channels.map((channel) => (
+              {filteredChannels.map((channel) => (
                 <div
                   key={channel.id}
                   onClick={() => onSelectChannel(channel)}
@@ -189,7 +276,7 @@ export const TvGuideView: React.FC<TvGuideViewProps> = ({
           <div
             ref={gridContainerRef}
             className="flex-1 overflow-x-auto overflow-y-hidden relative select-none scroll-smooth"
-            style={{ minHeight: `${channels.length * 80 + 48}px` }}
+            style={{ minHeight: `${filteredChannels.length * 80 + 48}px` }}
           >
             {/* Timeline Header (30-min intervals) */}
             <div
@@ -225,7 +312,7 @@ export const TvGuideView: React.FC<TvGuideViewProps> = ({
               className="divide-y divide-cable-border/60 relative"
               style={{ width: `${timeSlots.length * 30 * MINUTE_WIDTH}px` }}
             >
-              {channels.map((channel) => {
+              {filteredChannels.map((channel) => {
                 const programs =
                   programsByChannel.get(channel.tvgId || '') ||
                   programsByChannel.get(channel.id) ||

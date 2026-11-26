@@ -24,8 +24,12 @@ import {
   History,
   PictureInPicture,
   Languages,
+  FastForward,
+  Sparkles,
+  Volume1,
+  Film,
 } from 'lucide-react';
-import { Channel, EpgProgram, PlaybackState, TimeZoneSetting, StreamDiagnostics } from '../types';
+import { Channel, EpgProgram, PlaybackState, TimeZoneSetting, StreamDiagnostics, VodItem, VodEpisode, SoundMode } from '../types';
 import { formatTimeInZone, getProgramProgress } from '../utils/dateUtils';
 import {
   createDefaultDiagnostics,
@@ -34,9 +38,12 @@ import {
   calculateStreamHealth,
 } from '../utils/streamDiagnostics';
 import { calculateProgramTimeshift, formatDuration } from '../utils/catchupUtils';
+import { SOUND_MODE_PROFILES, calculateVodProgress, saveVodProgress, getVodProgressForItem } from '../utils/vodUtils';
 
 interface PlayerProps {
-  channel: Channel | null;
+  channel?: Channel | null;
+  vodItem?: VodItem | null;
+  vodEpisode?: VodEpisode | null;
   currentProgram?: EpgProgram;
   nextProgram?: EpgProgram;
   timeZone: TimeZoneSetting;
@@ -50,10 +57,13 @@ interface PlayerProps {
   lastChannel?: Channel | null;
   onRecordLive?: () => void;
   isRecording?: boolean;
+  onPlayNextEpisode?: () => void;
 }
 
 export const Player: React.FC<PlayerProps> = ({
   channel,
+  vodItem,
+  vodEpisode,
   currentProgram,
   nextProgram,
   timeZone,
@@ -67,6 +77,7 @@ export const Player: React.FC<PlayerProps> = ({
   lastChannel,
   onRecordLive,
   isRecording = false,
+  onPlayNextEpisode,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -94,6 +105,12 @@ export const Player: React.FC<PlayerProps> = ({
   const [showMiniGuide, setShowMiniGuide] = useState<boolean>(false);
   const [isRestarted, setIsRestarted] = useState<boolean>(false);
   const [restartedOffsetSec, setRestartedOffsetSec] = useState<number>(0);
+
+  // Phase 6 VOD & Audio Modes
+  const [vodCurrentTime, setVodCurrentTime] = useState<number>(0);
+  const [vodDuration, setVodDuration] = useState<number>(0);
+  const [soundMode, setSoundMode] = useState<SoundMode>('standard');
+  const [showSoundMenu, setShowSoundMenu] = useState<boolean>(false);
 
   const [errorState, setErrorState] = useState<{
     type: 'cors' | 'offline' | 'codec' | 'generic';
@@ -164,9 +181,12 @@ export const Player: React.FC<PlayerProps> = ({
 
   // Main stream loading & HLS lifecycle
   useEffect(() => {
-    if (!channel || !videoRef.current) return;
-
     const video = videoRef.current;
+    if (!video) return;
+
+    const streamUrl = vodEpisode?.streamUrl || vodItem?.streamUrl || channel?.url;
+    if (!streamUrl) return;
+
     setErrorState(null);
     setIsBuffering(true);
     setIsRestarted(false);
@@ -181,7 +201,15 @@ export const Player: React.FC<PlayerProps> = ({
       hlsRef.current = null;
     }
 
-    const streamUrl = channel.url;
+    // Check if resuming VOD
+    if (vodItem) {
+      const saved = getVodProgressForItem(vodItem.id, vodEpisode?.id);
+      if (saved && saved.positionSec > 15 && !saved.completed) {
+        setTimeout(() => {
+          if (videoRef.current) videoRef.current.currentTime = saved.positionSec;
+        }, 600);
+      }
+    }
 
     // Check if browser has native HLS support (Safari / iOS)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -465,17 +493,40 @@ export const Player: React.FC<PlayerProps> = ({
     pingOsd();
   };
 
-  if (!channel) {
+  if (!channel && !vodItem) {
     return (
       <div className="w-full aspect-video bg-cable-900 border border-cable-border rounded-xl flex flex-col items-center justify-center p-8 text-center text-slate-400">
         <Tv className="w-16 h-16 text-slate-600 mb-3 animate-pulse" />
-        <h3 className="text-xl font-bold text-slate-200">No Channel Selected</h3>
+        <h3 className="text-xl font-bold text-slate-200">No Content Selected</h3>
         <p className="text-sm mt-1 max-w-md">
-          Pick a channel from Live TV, your Favourites, or the TV Guide to start watching.
+          Pick a live channel, sports match, movie, or series episode to start watching.
         </p>
       </div>
     );
   }
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current && (vodItem || vodEpisode)) {
+      const cur = videoRef.current.currentTime;
+      const dur = videoRef.current.duration || 0;
+      setVodCurrentTime(cur);
+      if (dur > 0) setVodDuration(dur);
+      if (vodItem && dur > 0) {
+        saveVodProgress(calculateVodProgress(vodItem.id, cur, dur, vodEpisode?.id));
+      }
+    }
+  };
+
+  const formatTimeSec = (sec: number) => {
+    if (!sec || isNaN(sec)) return '0:00';
+    const hrs = Math.floor(sec / 3600);
+    const mins = Math.floor((sec % 3600) / 60);
+    const secs = Math.floor(sec % 60);
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const progress = currentProgram ? getProgramProgress(currentProgram.start, currentProgram.end) : 0;
   const health = calculateStreamHealth(diagnostics.bufferLengthSec, diagnostics.droppedFrames);
@@ -500,6 +551,7 @@ export const Player: React.FC<PlayerProps> = ({
             : 'object-contain'
         }`}
         playsInline
+        onTimeUpdate={handleTimeUpdate}
         onWaiting={() => setIsBuffering(true)}
         onPlaying={() => {
           setIsBuffering(false);
@@ -512,7 +564,7 @@ export const Player: React.FC<PlayerProps> = ({
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-xs pointer-events-none z-20">
           <div className="w-14 h-14 border-4 border-amber-400 border-t-transparent rounded-full animate-spin shadow-cable-focus" />
           <span className="mt-3 text-amber-300 font-mono text-sm tracking-wider uppercase font-semibold">
-            Tuning CH {channel.channelNumber}...
+            {channel ? `Tuning CH ${channel.channelNumber}...` : 'Loading On-Demand Stream...'}
           </span>
         </div>
       )}
@@ -585,7 +637,7 @@ export const Player: React.FC<PlayerProps> = ({
 
           <div className="overflow-x-auto flex items-center space-x-3 py-1 no-scrollbar">
             {allChannels.map((ch) => {
-              const isCur = ch.id === channel.id;
+              const isCur = channel ? ch.id === channel.id : false;
               return (
                 <div
                   key={ch.id}
@@ -663,46 +715,122 @@ export const Player: React.FC<PlayerProps> = ({
           showOsd || !isPlaying || errorState ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        {/* Top OSD Bar: Channel Branding & Stream Status */}
+        {/* Top OSD Bar: Channel / VOD Branding & Stream Status */}
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3 bg-neutral-950/85 backdrop-blur-md border border-neutral-700/80 p-2.5 px-4 rounded-xl shadow-xl pointer-events-auto">
-            {channel.logo ? (
+          {vodItem ? (
+            <div className="flex items-center space-x-3 bg-neutral-950/85 backdrop-blur-md border border-neutral-700/80 p-2.5 px-4 rounded-xl shadow-xl pointer-events-auto">
               <img
-                src={channel.logo}
-                alt={channel.name}
-                className="w-10 h-10 object-contain rounded bg-black/40 p-1"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
+                src={vodItem.poster}
+                alt={vodItem.title}
+                className="w-10 h-10 object-cover rounded bg-black/40"
               />
-            ) : (
-              <div className="w-10 h-10 rounded bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-sm">
-                CH
-              </div>
-            )}
-
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-mono text-xs font-black bg-amber-400 text-neutral-950 px-2 py-0.5 rounded shadow">
-                  CH {channel.channelNumber}
-                </span>
-                <span className="text-base font-extrabold text-white tracking-wide">{channel.name}</span>
-                <span className="text-[11px] font-semibold text-slate-300 bg-neutral-800 px-2 py-0.5 rounded border border-neutral-700">
-                  {channel.group}
-                </span>
-                {isRestarted && (
-                  <span className="text-[10px] font-mono font-bold bg-amber-400 text-black px-1.5 py-0.2 rounded animate-pulse">
-                    RESTARTED (-{formatDuration(restartedOffsetSec)})
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono text-xs font-black bg-amber-400 text-neutral-950 px-2 py-0.5 rounded shadow">
+                    {vodItem.type === 'movie' ? 'VOD MOVIE' : 'TV SERIES'}
                   </span>
-                )}
+                  <span className="text-base font-extrabold text-white tracking-wide">{vodItem.title}</span>
+                  <span className="text-[11px] font-semibold text-slate-300 bg-neutral-800 px-2 py-0.5 rounded border border-neutral-700">
+                    {vodItem.category}
+                  </span>
+                  <span className="text-[10px] font-mono text-amber-300 border border-neutral-700 px-1.5 py-0.2 rounded bg-black/50">
+                    {vodItem.rating}
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-300 block mt-0.5">
+                  {vodEpisode
+                    ? `Season ${vodEpisode.seasonNumber} : Episode ${vodEpisode.episodeNumber} • ${vodEpisode.title}`
+                    : `${vodItem.releaseYear} • Full On-Demand Feature`}
+                </span>
               </div>
-              <span className="text-[11px] text-slate-400 block mt-0.5">
-                Source: {channel.sourceName}
-              </span>
             </div>
-          </div>
+          ) : channel ? (
+            <div className="flex items-center space-x-3 bg-neutral-950/85 backdrop-blur-md border border-neutral-700/80 p-2.5 px-4 rounded-xl shadow-xl pointer-events-auto">
+              {channel.logo ? (
+                <img
+                  src={channel.logo}
+                  alt={channel.name}
+                  className="w-10 h-10 object-contain rounded bg-black/40 p-1"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-bold text-sm">
+                  CH
+                </div>
+              )}
+
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono text-xs font-black bg-amber-400 text-neutral-950 px-2 py-0.5 rounded shadow">
+                    CH {channel.channelNumber}
+                  </span>
+                  <span className="text-base font-extrabold text-white tracking-wide">{channel.name}</span>
+                  <span className="text-[11px] font-semibold text-slate-300 bg-neutral-800 px-2 py-0.5 rounded border border-neutral-700">
+                    {channel.group}
+                  </span>
+                  {isRestarted && (
+                    <span className="text-[10px] font-mono font-bold bg-amber-400 text-black px-1.5 py-0.2 rounded animate-pulse">
+                      RESTARTED (-{formatDuration(restartedOffsetSec)})
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] text-slate-400 block mt-0.5">
+                  Source: {channel.sourceName}
+                </span>
+              </div>
+            </div>
+          ) : null}
 
           <div className="flex items-center space-x-2 pointer-events-auto">
+            {/* Audio Sound Mode Preset Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSoundMenu(!showSoundMenu)}
+                className={`px-2.5 py-2 rounded-lg border shadow text-xs font-bold font-mono flex items-center space-x-1.5 cable-focus-ring ${
+                  soundMode !== 'standard'
+                    ? 'bg-amber-400 text-black border-amber-300'
+                    : 'bg-neutral-950/80 hover:bg-neutral-800 text-slate-300 hover:text-white border-neutral-700'
+                }`}
+                title="Audio Sound Mode Presets"
+              >
+                <Volume1 className="w-4 h-4" />
+                <span className="hidden md:inline uppercase">{soundMode} EQ</span>
+              </button>
+
+              {showSoundMenu && (
+                <div className="absolute top-12 right-0 w-64 bg-neutral-950/95 backdrop-blur-md border border-neutral-700 p-3 rounded-xl shadow-2xl text-xs space-y-2 z-50">
+                  <div className="font-bold text-amber-400 flex items-center justify-between border-b border-neutral-800 pb-1.5">
+                    <span>Audio Sound Mode</span>
+                    <button onClick={() => setShowSoundMenu(false)} className="text-slate-400 hover:text-white">✕</button>
+                  </div>
+                  <div className="space-y-1">
+                    {SOUND_MODE_PROFILES.map((prof) => (
+                      <button
+                        key={prof.id}
+                        onClick={() => {
+                          setSoundMode(prof.id);
+                          setShowSoundMenu(false);
+                        }}
+                        className={`w-full text-left p-2 rounded-lg transition ${
+                          soundMode === prof.id ? 'bg-amber-400 text-neutral-950 font-bold' : 'hover:bg-neutral-800 text-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs">{prof.label}</span>
+                          {soundMode === prof.id && <Check className="w-3.5 h-3.5" />}
+                        </div>
+                        <p className={`text-[10px] mt-0.5 line-clamp-1 ${soundMode === prof.id ? 'text-neutral-800' : 'text-slate-400'}`}>
+                          {prof.description}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Live Sports Companion Bar Trigger */}
             {onOpenSportsBar && (
               <button
@@ -717,14 +845,16 @@ export const Player: React.FC<PlayerProps> = ({
             )}
 
             {/* Quick Surfing Drawer Button */}
-            <button
-              onClick={() => setShowMiniGuide((prev) => !prev)}
-              className="bg-neutral-950/80 hover:bg-neutral-800 text-slate-300 hover:text-white px-3 py-2 rounded-lg border border-neutral-700 shadow text-xs flex items-center space-x-1.5 cable-focus-ring"
-              title="Channel Surfing Mini-Guide (G)"
-            >
-              <List className="w-4 h-4 text-amber-400" />
-              <span className="hidden sm:inline">Channels</span>
-            </button>
+            {allChannels.length > 0 && (
+              <button
+                onClick={() => setShowMiniGuide((prev) => !prev)}
+                className="bg-neutral-950/80 hover:bg-neutral-800 text-slate-300 hover:text-white px-3 py-2 rounded-lg border border-neutral-700 shadow text-xs flex items-center space-x-1.5 cable-focus-ring"
+                title="Channel Surfing Mini-Guide (G)"
+              >
+                <List className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline">Channels</span>
+              </button>
+            )}
 
             {/* Diagnostics HUD Toggle */}
             <button
@@ -753,8 +883,77 @@ export const Player: React.FC<PlayerProps> = ({
 
         {/* Bottom OSD Bar: Program Info & Player Controls */}
         <div className="space-y-3 pointer-events-auto">
-          {/* Cable Program Banner with Restart TV Button */}
-          {currentProgram && (
+          {/* VOD Playback Scrub Bar & Controls (Phase 6) */}
+          {vodItem && (
+            <div className="bg-neutral-950/90 backdrop-blur-md border border-neutral-700/80 p-4 rounded-xl shadow-2xl space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-mono text-slate-300">
+                <div className="flex items-center space-x-2">
+                  <Film className="w-4 h-4 text-amber-400" />
+                  <span className="font-bold text-white truncate max-w-md">
+                    {vodEpisode ? `S${vodEpisode.seasonNumber}:E${vodEpisode.episodeNumber} - ${vodEpisode.title}` : vodItem.title}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2 text-slate-400 shrink-0">
+                  <span>{formatTimeSec(vodCurrentTime)}</span>
+                  <span>/</span>
+                  <span>{formatTimeSec(vodDuration)}</span>
+                </div>
+              </div>
+
+              {/* Seek Scrubber Slider */}
+              <input
+                type="range"
+                min={0}
+                max={vodDuration || 100}
+                value={vodCurrentTime}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setVodCurrentTime(val);
+                  if (videoRef.current) videoRef.current.currentTime = val;
+                }}
+                className="w-full accent-amber-400 cursor-pointer h-2 bg-neutral-800 rounded-lg"
+              />
+
+              {/* VOD Skip Buttons Bar */}
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      if (videoRef.current) videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+                    }}
+                    className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-cable-800 hover:bg-cable-700 text-xs font-bold text-slate-200 border border-cable-border"
+                    title="Skip backward 10 seconds"
+                  >
+                    <Rewind className="w-3.5 h-3.5" />
+                    <span>-10s</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (videoRef.current) videoRef.current.currentTime = Math.min(vodDuration, videoRef.current.currentTime + 30);
+                    }}
+                    className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-cable-800 hover:bg-cable-700 text-xs font-bold text-slate-200 border border-cable-border"
+                    title="Skip forward 30 seconds"
+                  >
+                    <FastForward className="w-3.5 h-3.5" />
+                    <span>+30s</span>
+                  </button>
+                </div>
+
+                {onPlayNextEpisode && (
+                  <button
+                    onClick={onPlayNextEpisode}
+                    className="flex items-center space-x-1.5 px-4 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-neutral-950 font-bold text-xs shadow-cable-focus"
+                  >
+                    <span>Next Episode</span>
+                    <FastForward className="w-3.5 h-3.5 fill-current" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Cable Program Banner with Restart TV Button (Live TV) */}
+          {!vodItem && currentProgram && (
             <div className="bg-neutral-950/90 backdrop-blur-md border border-neutral-700/80 p-4 rounded-xl shadow-2xl">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">

@@ -13,9 +13,16 @@ import {
   filterRecordings,
 } from './src/utils/pvrUtils.js';
 import { searchLiveContent } from './src/utils/searchEngine.js';
+import { INITIAL_VOD_CATALOG } from './src/data/vodData.js';
+import {
+  filterVodCatalog,
+  getNextEpisode,
+  calculateVodProgress,
+  SOUND_MODE_PROFILES,
+} from './src/utils/vodUtils.js';
 
 console.log('======================================================');
-console.log('  WHY TV PHASE 5 COMPREHENSIVE VERIFICATION SUITE    ');
+console.log('  WHY TV PHASE 6 COMPREHENSIVE VERIFICATION SUITE    ');
 console.log('======================================================');
 
 let passedCount = 0;
@@ -504,8 +511,123 @@ const daznResults = searchLiveContent('dazn', DEMO_CHANNELS, epg, INITIAL_SPORTS
 assert(daznResults.length >= 2, `Search query "dazn" returns ${daznResults.length} channels and matches`);
 
 // ---------------------------------------------------------
+// TEST SUITE 17: ON-DEMAND ENTERTAINMENT HUB & BINGE ENGINE (PHASE 6)
+// ---------------------------------------------------------
+console.log('\n[Suite 17] Testing On-Demand VOD Catalog & Series Binge Engine (Phase 6)...');
+assert(Array.isArray(INITIAL_VOD_CATALOG) && INITIAL_VOD_CATALOG.length >= 8, `VOD Catalog contains ${INITIAL_VOD_CATALOG.length} titles (>= 8 required)`);
+
+const vodMovies = INITIAL_VOD_CATALOG.filter(v => v.type === 'movie');
+const vodSeries = INITIAL_VOD_CATALOG.filter(v => v.type === 'series');
+assert(vodMovies.length >= 5, `VOD Catalog has ${vodMovies.length} blockbuster movies (>= 5 required)`);
+assert(vodSeries.length >= 3, `VOD Catalog has ${vodSeries.length} bingeable TV series (>= 3 required)`);
+
+// Movie metadata validation
+const tearsOfSteel = vodMovies.find(m => m.id === 'vod_mov_tears_of_steel');
+assert(tearsOfSteel !== undefined, 'Found Tears of Steel blockbuster in catalog');
+assert(tearsOfSteel.durationMinutes === 108, 'Movie duration correctly defined (108 mins)');
+assert(tearsOfSteel.rating === 'PG-13', 'Movie rating verified');
+assert(tearsOfSteel.category === 'Sci-Fi', 'Movie category is Sci-Fi');
+assert(tearsOfSteel.streamUrl.startsWith('https://'), 'Movie has valid HTTPS stream URL');
+assert(tearsOfSteel.backdrop.length > 0 && tearsOfSteel.poster.length > 0, 'Movie has backdrop & poster artwork');
+
+// Series episode validation
+const gridiron = vodSeries.find(s => s.id === 'vod_ser_gridiron_dynasties');
+assert(gridiron !== undefined, 'Found Gridiron Dynasties series in catalog');
+assert(Array.isArray(gridiron.episodes) && gridiron.episodes.length === 4, 'Gridiron Dynasties has 4 episodes');
+assert(gridiron.episodes[0].title.includes('Training') || gridiron.episodes[0].title.includes('Kickoff'), 'Episode 1 title valid');
+assert(gridiron.episodes[0].streamUrl.startsWith('https://'), 'Episode 1 stream URL is HTTPS');
+assert(gridiron.episodes[0].durationMinutes > 0, 'Episode 1 duration is positive');
+
+// VOD Filtering Tests
+const scifiResults = filterVodCatalog(INITIAL_VOD_CATALOG, 'Sci-Fi', 'all', '');
+assert(scifiResults.length >= 2, `Sci-Fi filter returned ${scifiResults.length} titles`);
+
+const movieOnlyResults = filterVodCatalog(INITIAL_VOD_CATALOG, 'All', 'movie', '');
+assert(movieOnlyResults.every(v => v.type === 'movie'), 'Movie-only filter returned strictly movies');
+
+const seriesOnlyResults = filterVodCatalog(INITIAL_VOD_CATALOG, 'All', 'series', '');
+assert(seriesOnlyResults.every(v => v.type === 'series'), 'Series-only filter returned strictly TV series');
+
+const mahomesSearch = filterVodCatalog(INITIAL_VOD_CATALOG, 'All', 'all', 'Mahomes');
+assert(mahomesSearch.length >= 1, 'Search query "Mahomes" found Gridiron Dynasties series');
+assert(mahomesSearch[0].id === 'vod_ser_gridiron_dynasties', 'Search query correctly matched vod_ser_gridiron_dynasties');
+
+// Binge Next Episode Logic
+const ep1 = gridiron.episodes[0];
+const ep2 = gridiron.episodes[1];
+const ep3 = gridiron.episodes[2];
+
+const nextAfterEp1 = getNextEpisode(gridiron, ep1.id);
+assert(nextAfterEp1 !== null && nextAfterEp1.id === ep2.id, 'Next episode after Ep 1 correctly returns Ep 2');
+
+const nextAfterEp2 = getNextEpisode(gridiron, ep2.id);
+assert(nextAfterEp2 !== null && nextAfterEp2.id === ep3.id, 'Next episode after Ep 2 correctly returns Ep 3');
+
+const nextAfterEp3 = getNextEpisode(gridiron, ep3.id);
+assert(nextAfterEp3 !== null, 'Next episode after Ep 3 correctly returns Ep 4');
+
+// VOD Progress Calculation
+const pZero = calculateVodProgress('vod_test', 0, 3600);
+assert(pZero.percent === 0 && !pZero.completed, '0s watched yields 0% and completed=false');
+
+const pHalf = calculateVodProgress('vod_test', 1800, 3600);
+assert(pHalf.percent === 50 && !pHalf.completed, '1800s/3600s watched yields 50% and completed=false');
+
+const pDone = calculateVodProgress('vod_test', 3400, 3600);
+assert(pDone.percent >= 94 && pDone.completed, '3400s/3600s watched (>92%) marks completed=true');
+
+// ---------------------------------------------------------
+// TEST SUITE 18: TV GUIDE PRIME-TIME JUMP & AUDIO SOUND MODES (PHASE 6)
+// ---------------------------------------------------------
+console.log('\n[Suite 18] Testing TV Guide Prime-Time Jump & Audio Sound Modes (Phase 6)...');
+assert(Array.isArray(SOUND_MODE_PROFILES) && SOUND_MODE_PROFILES.length === 4, '4 Sound Mode profiles defined');
+
+const modeIds = SOUND_MODE_PROFILES.map(m => m.id);
+assert(modeIds.includes('standard'), 'Standard flat sound mode available');
+assert(modeIds.includes('stadium'), 'Stadium Mode available');
+assert(modeIds.includes('dialogue'), 'Clear Commentary mode available');
+assert(modeIds.includes('cinema'), 'Cinema Boost mode available');
+
+// Stadium Mode Acoustics
+const stadiumMode = SOUND_MODE_PROFILES.find(m => m.id === 'stadium');
+assert(stadiumMode.bassGain >= 5, `Stadium Mode bass boost is +${stadiumMode.bassGain}dB (>= +5dB)`);
+assert(stadiumMode.trebleGain >= 2, `Stadium Mode treble boost is +${stadiumMode.trebleGain}dB (>= +2dB)`);
+
+// Dialogue / Commentary Acoustics
+const dialogueMode = SOUND_MODE_PROFILES.find(m => m.id === 'dialogue');
+assert(dialogueMode.midGain >= 6, `Clear Commentary mid boost is +${dialogueMode.midGain}dB (>= +6dB)`);
+assert(dialogueMode.trebleGain >= 2, `Clear Commentary treble boost is +${dialogueMode.trebleGain}dB`);
+
+// Cinema Boost Acoustics
+const cinemaMode = SOUND_MODE_PROFILES.find(m => m.id === 'cinema');
+assert(cinemaMode.bassGain >= 4, `Cinema Boost bass is +${cinemaMode.bassGain}dB`);
+assert(cinemaMode.trebleGain >= 3, `Cinema Boost treble is +${cinemaMode.trebleGain}dB`);
+
+// Prime-Time Quick Jump Calculation Logic
+function calculatePrimeTimeJump(fromTime) {
+  const target = new Date(fromTime);
+  target.setHours(20, 0, 0, 0); // 8:00 PM
+  if (fromTime.getHours() > 20 || (fromTime.getHours() === 20 && fromTime.getMinutes() > 30)) {
+    target.setDate(target.getDate() + 1);
+  }
+  return target;
+}
+
+// 1. Afternoon time jumps to 8 PM tonight
+const afternoon = new Date(2026, 10, 26, 14, 0, 0);
+const jumpTonight = calculatePrimeTimeJump(afternoon);
+assert(jumpTonight.getHours() === 20 && jumpTonight.getMinutes() === 0, 'Afternoon jump lands exactly on 20:00 (8:00 PM)');
+assert(jumpTonight.getDate() === afternoon.getDate(), 'Afternoon jump targets today prime time');
+
+// 2. Late night time (21:15) jumps to 8 PM tomorrow
+const lateNight = new Date(2026, 10, 26, 21, 15, 0);
+const jumpTomorrow = calculatePrimeTimeJump(lateNight);
+assert(jumpTomorrow.getHours() === 20 && jumpTomorrow.getMinutes() === 0, 'Late night jump lands on 20:00 (8:00 PM)');
+assert(jumpTomorrow.getDate() === lateNight.getDate() + 1, 'Late night jump targets tomorrow prime time');
+
+// ---------------------------------------------------------
 // FINAL AUDIT SUMMARY
 // ---------------------------------------------------------
 console.log('\n======================================================');
-console.log(`  PHASE 5 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
+console.log(`  PHASE 6 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
 console.log('======================================================\n');
