@@ -1,6 +1,6 @@
 import { parseM3U } from './src/utils/m3uParser.js';
 import { parseXMLTV, parseXmltvDate } from './src/utils/xmltvParser.js';
-import { SAMPLE_M3U_CONTENT, SAMPLE_XMLTV_CONTENT, DEMO_CHANNELS, generateDynamicDemoEpg } from './src/data/demoData.js';
+import { SAMPLE_M3U_CONTENT, SAMPLE_XMLTV_CONTENT, DEMO_CHANNELS, PRESET_PROVIDERS, generateDynamicDemoEpg } from './src/data/demoData.js';
 import { formatBitrate, formatBuffer, calculateStreamHealth, createDefaultDiagnostics } from './src/utils/streamDiagnostics.js';
 import { calculateProgramTimeshift, formatDuration, generateTimeshiftUrl } from './src/utils/catchupUtils.js';
 import { generateXtreamM3uUrl, generateXtreamEpgUrl, normalizeServerUrl } from './src/utils/xtreamClient.js';
@@ -15,7 +15,7 @@ import {
 import { searchLiveContent } from './src/utils/searchEngine.js';
 
 console.log('======================================================');
-console.log('  WHY TV PHASE 4 COMPREHENSIVE VERIFICATION SUITE    ');
+console.log('  WHY TV PHASE 5 COMPREHENSIVE VERIFICATION SUITE    ');
 console.log('======================================================');
 
 let passedCount = 0;
@@ -383,8 +383,110 @@ const emptyResults = searchLiveContent('', DEMO_CHANNELS, epg, INITIAL_SPORTS_GA
 assert(emptyResults.length === 0, 'Empty search query cleanly returns 0 results without errors');
 
 // ---------------------------------------------------------
+// TEST SUITE 15: EXPANDED MULTI-PROVIDER CHANNEL FLEET (PHASE 5)
+// ---------------------------------------------------------
+console.log('\n[Suite 15] Testing Multi-Provider Channels Expansion (Phase 5)...');
+assert(DEMO_CHANNELS.length >= 36, `Expanded channel roster contains ${DEMO_CHANNELS.length} channels (>= 36 required)`);
+assert(PRESET_PROVIDERS.length >= 6, `Preset IPTV providers configured: ${PRESET_PROVIDERS.length} (>= 6 required)`);
+
+// Check unique IDs and positive channel numbers
+const channelIds = new Set();
+const channelNumbers = new Set();
+for (const ch of DEMO_CHANNELS) {
+  assert(!channelIds.has(ch.id), `Channel ID is globally unique: ${ch.id}`);
+  assert(ch.channelNumber > 0, `Channel ${ch.name} has valid positive number: ${ch.channelNumber}`);
+  assert(ch.name && ch.name.length > 2, `Channel has non-empty valid name: ${ch.name}`);
+  assert(ch.url.startsWith('https://'), `Channel ${ch.name} has valid secure stream URL: ${ch.url}`);
+  assert(ch.group && ch.group.length > 0, `Channel ${ch.name} belongs to valid group: ${ch.group}`);
+  channelIds.add(ch.id);
+  channelNumbers.add(ch.channelNumber);
+}
+
+// Category coverage assertions
+const sportsChannels = DEMO_CHANNELS.filter(c => c.group === 'Sports');
+assert(sportsChannels.length >= 12, `Sports fleet expanded to ${sportsChannels.length} channels (>= 12 required)`);
+
+const newsChannels = DEMO_CHANNELS.filter(c => c.group === 'News');
+assert(newsChannels.length >= 6, `News fleet expanded to ${newsChannels.length} channels (>= 6 required)`);
+
+const movieChannels = DEMO_CHANNELS.filter(c => c.group === 'Movies');
+assert(movieChannels.length >= 6, `Movie & Entertainment fleet expanded to ${movieChannels.length} channels (>= 6 required)`);
+
+const kidsChannels = DEMO_CHANNELS.filter(c => c.group === 'Kids');
+assert(kidsChannels.length >= 3, `Kids & Animation fleet contains ${kidsChannels.length} channels (>= 3 required)`);
+
+// Service identity verification
+const hasSportsnet = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('sportsnet'));
+assert(hasSportsnet, 'Rogers Sportsnet channels present in expanded fleet');
+
+const hasTsn = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('tsn'));
+assert(hasTsn, 'Bell Fibe TSN channels present in expanded fleet');
+
+const hasDazn = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('dazn'));
+assert(hasDazn, 'DAZN Sports channels present in expanded fleet');
+
+const hasRedZone = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('redzone'));
+assert(hasRedZone, 'NFL RedZone live channel present in expanded fleet');
+
+const hasGolazo = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('golazo'));
+assert(hasGolazo, 'CBS Sports Golazo football channel present in expanded fleet');
+
+const hasPluto = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('pluto'));
+assert(hasPluto, 'Pluto TV FAST channels present in expanded fleet');
+
+const hasCanadianNews = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('ctv') || c.name.toLowerCase().includes('global news'));
+assert(hasCanadianNews, 'Canadian regional news networks (CTV / Global) present in expanded fleet');
+
+// ---------------------------------------------------------
+// TEST SUITE 16: EXPANDED LIVE SPORTS COVERAGE & 1-CLICK TUNING (PHASE 5)
+// ---------------------------------------------------------
+console.log('\n[Suite 16] Testing Live Sports Coverage & 1-Click Tuning Assurances (Phase 5)...');
+assert(INITIAL_SPORTS_GAMES.length >= 17, `Live sports fixtures expanded to ${INITIAL_SPORTS_GAMES.length} games (>= 17 required)`);
+assert(SPORTS_LEAGUES.some(l => l.id === 'MLB'), 'MLB added to supported sports leagues filter list');
+
+// 1. Golf / PGA Tour search
+const golfMatches = searchLiveContent('golf', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(golfMatches.length >= 1, 'Search query "golf" successfully returns PGA Tour Masters fixture');
+const pgaMatch = golfMatches.find(g => g.title.includes('PGA Tour') || g.title.includes('Masters'));
+assert(pgaMatch !== undefined, 'PGA Tour Masters live card identified');
+assert(pgaMatch.channel.channelNumber === 128, 'PGA Tour match routes to CH 128');
+assert(pgaMatch.channel.url.startsWith('https://'), 'CH 128 has valid playable stream URL');
+
+// 2. Baseball / MLB search
+const baseballMatches = searchLiveContent('baseball', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(baseballMatches.length >= 1, 'Search query "baseball" returns Blue Jays vs Yankees MLB match');
+assert(baseballMatches[0].channel.channelNumber === 120, 'Blue Jays match tunes to Sportsnet East (CH 120)');
+
+// 3. NFL RedZone search
+const redzoneMatches = searchLiveContent('redzone', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(redzoneMatches.length >= 1, 'Search query "redzone" returns NFL RedZone Live');
+assert(redzoneMatches[0].channel.channelNumber === 126, 'NFL RedZone tunes to CH 126');
+
+// 4. CFL Football search
+const cflMatches = searchLiveContent('cfl', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(cflMatches.length >= 1, 'Search query "cfl" returns CFL Football (Bombers vs Lions)');
+const cflGame = cflMatches.find(g => g.title.includes('Bombers') || g.title.includes('Lions'));
+assert(cflGame !== undefined, 'CFL game identified in search results');
+assert(cflGame.channel.channelNumber === 122, 'CFL game tunes to TSN 1 (CH 122)');
+
+// 5. Combat / UFC search
+const combatMatches = searchLiveContent('ufc', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(combatMatches.length >= 1, 'Search query "ufc" returns UFC 312 Title Fight Night');
+assert(combatMatches[0].channel.channelNumber === 125, 'UFC fixture tunes to DAZN Fight Night (CH 125)');
+
+// 6. Provider brand queries: Sportsnet, TSN, DAZN
+const sportsnetResults = searchLiveContent('sportsnet', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(sportsnetResults.length >= 2, `Search query "sportsnet" returns ${sportsnetResults.length} channels`);
+
+const tsnResults = searchLiveContent('tsn', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(tsnResults.length >= 2, `Search query "tsn" returns ${tsnResults.length} channels`);
+
+const daznResults = searchLiveContent('dazn', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(daznResults.length >= 2, `Search query "dazn" returns ${daznResults.length} channels and matches`);
+
+// ---------------------------------------------------------
 // FINAL AUDIT SUMMARY
 // ---------------------------------------------------------
 console.log('\n======================================================');
-console.log(`  PHASE 4 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
+console.log(`  PHASE 5 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
 console.log('======================================================\n');

@@ -155,7 +155,7 @@ export interface CatchupCalculation {
   restartUrl?: string;
 }
 
-export type SportLeague = 'NHL' | 'NBA' | 'SOCCER' | 'MLB' | 'NFL' | 'MOTORSPORT';
+export type SportLeague = 'NHL' | 'NBA' | 'SOCCER' | 'MLB' | 'NFL' | 'MOTORSPORT' | 'GOLF' | 'COMBAT';
 
 export interface SportsTeam {
   name: string;

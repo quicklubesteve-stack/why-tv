@@ -12,6 +12,13 @@ const SYNONYMS: Record<string, string[]> = {
   nhl: ['nhl', 'hockey', 'leafs', 'canadiens', 'oilers', 'flames', 'bruins', 'canucks', 'mcdavid'],
   basketball: ['basketball', 'nba', 'raptors', 'celtics', 'lakers', 'warriors'],
   nba: ['nba', 'basketball', 'raptors', 'celtics', 'barnes', 'tatum'],
+  baseball: ['baseball', 'mlb', 'blue jays', 'yankees', 'red sox', 'dodgers', 'home run'],
+  mlb: ['mlb', 'baseball', 'blue jays', 'yankees', 'red sox', 'dodgers'],
+  golf: ['golf', 'pga', 'masters', 'scheffler', 'mcilroy', 'amen corner'],
+  pga: ['pga', 'golf', 'masters', 'tour'],
+  combat: ['combat', 'ufc', 'mma', 'boxing', 'fight', 'championship'],
+  ufc: ['ufc', 'mma', 'combat', 'fight', 'boxing', 'octagon'],
+  cfl: ['cfl', 'canadian football', 'blue bombers', 'bc lions', 'grey cup'],
   racing: ['racing', 'motorsport', 'f1', 'formula', 'speed', 'verstappen', 'leclerc', 'ferrari', 'red bull'],
   news: ['news', 'breaking', 'headlines', 'politics', 'dw', 'france 24', 'al jazeera', 'cbc', 'world'],
   movies: ['movies', 'film', 'cinema', 'action', 'thriller', 'sci-fi', 'hollywood'],
@@ -58,6 +65,9 @@ export function searchLiveContent(
       ${game.league === 'SOCCER' ? 'football soccer premier league' : ''}
       ${game.league === 'NHL' ? 'hockey nhl' : ''}
       ${game.league === 'NBA' ? 'basketball nba' : ''}
+      ${game.league === 'MLB' ? 'baseball mlb blue jays yankees' : ''}
+      ${game.league === 'GOLF' ? 'golf pga masters' : ''}
+      ${game.league === 'COMBAT' ? 'combat ufc mma boxing fight' : ''}
       ${game.league === 'MOTORSPORT' ? 'racing motorsport f1' : ''}
     `.toLowerCase();
 

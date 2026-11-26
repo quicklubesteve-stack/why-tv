@@ -72,7 +72,17 @@ export class StorageService {
       const data = localStorage.getItem(KEYS.CHANNELS);
       if (data) {
         const parsed: Channel[] = JSON.parse(data);
-        if (parsed.length > 0) return parsed;
+        if (parsed.length > 0) {
+          // Merge any demo channels that aren't present yet so expanded channels (Phase 5) automatically appear
+          const existingIds = new Set(parsed.map((c) => c.id));
+          const missingDemoChannels = DEMO_CHANNELS.filter((c) => !existingIds.has(c.id));
+          if (missingDemoChannels.length > 0) {
+            const merged = [...parsed, ...missingDemoChannels];
+            this.saveChannels(merged);
+            return merged;
+          }
+          return parsed;
+        }
       }
     } catch (e) {
       console.error('Failed to load channels from localStorage', e);

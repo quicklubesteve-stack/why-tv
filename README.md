@@ -23,7 +23,7 @@ npm run dev
 npm run build
 npm run preview
 
-# Run the 100% verified test suite (91 tests across 14 suites):
+# Run the 100% verified test suite (302 tests across 16 suites):
 npx tsx test-suite.mjs
 ```
 
@@ -46,7 +46,10 @@ WHY TV supports the three standard methods used by IPTV providers today:
 
 ### 3. 1-Click Curated Free & FAST Providers
 Pre-configured legal public stream bundles ready with 1 click:
-- **IPTV-Org North America**: Public Canadian & US news, regional broadcasts, and educational channels (CBC, CTV, Citytv, PBS, ABC News, etc.).
+- **DAZN, Sportsnet & TSN Live Sports Hub (Phase 5)**: Live sports & regional coverage including Sportsnet East, Sportsnet Ontario, TSN 1 Sports Centre, TSN 4 Action, DAZN Premier League, DAZN Fight Night, NFL RedZone, CBS Sports Golazo, PGA Tour Golf, and Stadium Sports.
+- **Pluto TV North America FAST Fleet (Phase 5)**: Curated 24/7 channels featuring Pluto Action Cinema, Pluto Crime Drama, Pluto Retro Classics, Pluto Sci-Fi Nexus, and Pluto Toon Arcade.
+- **Canadian Regional Networks (Phase 5)**: CTV National News HD, Global News 24/7 Coast-to-Coast, CBC Regional Newsfeed, and Toronto Metro Cable.
+- **IPTV-Org North America**: Public Canadian & US news, regional broadcasts, and educational channels.
 - **Cinema 24 FAST Movie Hub**: 24/7 continuous action, sci-fi, classics, and open cinema loops.
 - **Global News & Sports 24/7**: Live news & sports feeds (Deutsche Welle, France 24, NASA TV, Red Bull Extreme Sports).
 
