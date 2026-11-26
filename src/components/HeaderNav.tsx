@@ -30,6 +30,7 @@ interface HeaderNavProps {
   onOpenXtreamModal: () => void;
   onOpenSportsBar?: () => void;
   onOpenPvrModal?: () => void;
+  onOpenQuickSearch?: () => void;
   activeRecordingsCount?: number;
 }
 
@@ -46,6 +47,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   onOpenXtreamModal,
   onOpenSportsBar,
   onOpenPvrModal,
+  onOpenQuickSearch,
   activeRecordingsCount = 0,
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -163,6 +165,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
 
         {/* Right Tools: UI Theme Switcher, Sports Bar & Xtream / Clock */}
         <div className="flex items-center space-x-2 shrink-0">
+          {/* Quick Search Spotlight Trigger */}
+          {onOpenQuickSearch && (
+            <button
+              onClick={onOpenQuickSearch}
+              className="flex items-center space-x-1.5 bg-cable-850 hover:bg-cable-800 border border-neutral-700 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold text-slate-300 hover:text-white shadow cable-focus-ring"
+              title="Search live football, games & channels (Key: /)"
+            >
+              <Search className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Search</span>
+              <span className="hidden lg:inline text-[9px] bg-neutral-900 px-1 py-0.2 rounded text-slate-400 border border-neutral-700">/</span>
+            </button>
+          )}
+
           {/* Sports Companion Bar Trigger */}
           {onOpenSportsBar && (
             <button

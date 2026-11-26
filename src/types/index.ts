@@ -220,3 +220,22 @@ export interface MediaTrackOption {
   type: 'audio' | 'subtitle';
   active: boolean;
 }
+
+// ---------------------------------------------------------
+// PHASE 4: LIVE CONTENT & SPORTS SEARCH ENGINE
+// ---------------------------------------------------------
+export interface LiveSearchResult {
+  id: string;
+  type: 'live_game' | 'live_program' | 'channel';
+  title: string;
+  subtitle: string;
+  description?: string;
+  isLive: boolean;
+  liveClockOrStatus?: string;
+  channel: Channel;
+  scoreSummary?: string;
+  badge?: string;
+  category?: string;
+  startTime?: string;
+  endTime?: string;
+}

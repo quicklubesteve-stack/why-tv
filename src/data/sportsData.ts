@@ -77,11 +77,34 @@ export const INITIAL_SPORTS_GAMES: SportsGame[] = [
     statsSnippet: 'Aggregate: 4 - 3 • Vinicius Jr 88\' Goal',
     broadcaster: 'DAZN World',
     channelNumber: 104,
+  },
+  {
+    id: 'game_nfl_1',
+    league: 'NFL',
+    homeTeam: { name: 'Kansas City Chiefs', abbreviation: 'KC', score: 27, record: '12-2' },
+    awayTeam: { name: 'Buffalo Bills', abbreviation: 'BUF', score: 24, record: '11-3' },
+    status: 'live',
+    periodOrTime: '4th 02:18',
+    statsSnippet: 'Red Zone • Mahomes 285 YDS 3 TD • 4th & 2 at BUF 14',
+    broadcaster: 'Prime Sports Arena',
+    channelNumber: 108,
+  },
+  {
+    id: 'game_nfl_2',
+    league: 'NFL',
+    homeTeam: { name: 'Detroit Lions', abbreviation: 'DET', score: 34, record: '13-1' },
+    awayTeam: { name: 'Green Bay Packers', abbreviation: 'GB', score: 31, record: '9-5' },
+    status: 'live',
+    periodOrTime: '3rd 06:45',
+    statsSnippet: 'NFC North Showdown • Goff 24/30 310 YDS • Red Zone',
+    broadcaster: 'Toronto Metro Cable 10',
+    channelNumber: 110,
   }
 ];
 
 export const SPORTS_LEAGUES: { id: SportLeague | 'ALL'; label: string }[] = [
   { id: 'ALL', label: 'All Leagues' },
+  { id: 'NFL', label: 'NFL Football' },
   { id: 'NHL', label: 'NHL Hockey' },
   { id: 'NBA', label: 'NBA Basketball' },
   { id: 'SOCCER', label: 'Soccer' },

@@ -253,11 +253,13 @@ export function generateDynamicDemoEpg(channels: Channel[]): EpgProgram[] {
       { title: 'Conflict & Resolution Focus', desc: 'Special documentary on international diplomacy and human rights.', category: 'Documentary' }
     ],
     Sports: [
-      { title: 'Championship Showcase Live', desc: 'Action-packed coverage of the world’s most intense sporting events.', category: 'Sports' },
-      { title: 'Mountain Bike World Cup Highlights', desc: 'Downhill velocity, helmet cams, and adrenaline-pumping mountain descents.', category: 'Sports' },
-      { title: 'Formula Drift & Rally Classics', desc: 'High-speed tarmac maneuvers, engine breakdowns, and driver profiles.', category: 'Sports' },
-      { title: 'Action Sports Insider', desc: 'Behind the scenes with extreme sports athletes and upcoming tournaments.', category: 'Sports' },
-      { title: 'Global Football Roundup', desc: 'Goals, controversy, and tactical analysis from the weekend leagues.', category: 'Sports' }
+      { title: 'NFL Live Sunday Football: Chiefs vs Bills', desc: 'Patrick Mahomes leads the Chiefs against Josh Allen and the Bills in a prime-time AFC clash.', category: 'Sports' },
+      { title: 'Premier League Football Live: Arsenal vs Man City', desc: 'Top of the table title showdown live from Emirates Stadium.', category: 'Sports' },
+      { title: 'Sunday Night Football: Lions vs Packers', desc: 'NFC North rivals clash in high-stakes football under the stadium lights.', category: 'Sports' },
+      { title: 'NHL Hockey Live: Leafs vs Canadiens', desc: 'Saturday night hockey original six rivalry live from Scotiabank Arena.', category: 'Sports' },
+      { title: 'Formula 1 Grand Prix Qualifying & Speed', desc: 'High-speed tarmac maneuvers, pit strategies, and driver profiles.', category: 'Sports' },
+      { title: 'Action Sports Insider & Extreme Games', desc: 'Behind the scenes with extreme sports athletes and upcoming tournaments.', category: 'Sports' },
+      { title: 'Global Football & Soccer Roundup', desc: 'Goals, controversy, and tactical analysis from the weekend leagues.', category: 'Sports' }
     ],
     Movies: [
       { title: 'Tears of Steel: Directors Cut', desc: 'Sci-fi post-apocalyptic VFX thriller set in future Amsterdam.', category: 'Movies' },

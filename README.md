@@ -23,7 +23,7 @@ npm run dev
 npm run build
 npm run preview
 
-# Run the 100% verified test suite (75 tests across 13 suites):
+# Run the 100% verified test suite (91 tests across 14 suites):
 npx tsx test-suite.mjs
 ```
 
@@ -79,7 +79,14 @@ You can switch between layouts anytime using the **UI Theme Switcher** in the to
 - Direct launcher for the **Sports Companion Bar** to track scores alongside multi-game streams.
 - Swap channels on any slot or maximize to full screen.
 
-### 4. Bell Fibe / Rogers Cloud PVR & Storage Quota Manager (Phase 3)
+### 4. Live Content & Sports Search Engine (Phase 4)
+- **Semantic Live Search**: Search for keywords like **"football"**, **"hockey"**, **"soccer"**, **"chiefs"**, **"leafs"**, or **"news"** to see which channels are broadcasting live games right now.
+- **Instant Match & Game Cards**: Displays live scores (e.g. `KC 27 - BUF 24`), current game clock (`4th 02:18`), broadcaster name, and stats snippets.
+- **1-Click "Watch Game"**: Clicking any live match or program instantly tunes the player directly into that channel.
+- **Trending Search Pills**: 1-click pills for `🏈 Football (Live)`, `🏒 Hockey (NHL)`, `⚽ Soccer`, `🏀 Basketball (NBA)`, `🏎️ Motorsport (F1)`, `📰 Breaking News`, and `🎬 Movies`.
+- **Universal Spotlight Overlay**: Press **`/`** from anywhere in the app or tap the **Search** button in the top navigation bar to open the floating quick-search drawer.
+
+### 5. Bell Fibe / Rogers Cloud PVR & Storage Quota Manager (Phase 3)
 - **Cloud PVR Management**: Accessible via the **PVR** button in the header, Smarters Pro hub, or player controls.
 - **Storage Quota Meter**: Real-time capacity bar (e.g. `14.5 / 100 hrs used (15%)`) following Bell Fibe and Rogers Cloud PVR standards.
 - **Scheduled & Instant Recording**: Schedule recordings from the TV Guide ("Record Show") or record live broadcasts directly with the **`R`** shortcut or Record button.
@@ -132,6 +139,7 @@ WHY TV is optimized for 10-foot remote and laptop keyboard navigation:
 | **Arrow Keys (▲ ▼ ◀ ▶)** | Navigate focus ring across channels, categories, and guide cells |
 | **Enter / Space** | Tune channel, select button, or toggle play/pause |
 | **0 – 9 (Numeric Keys)** | Direct Cable Channel Dialing (dial e.g. `101` to tune to CH 101) |
+| **/** | Universal Quick Search (search "football", live games, channels) |
 | **L** | Last Channel Recall (toggle back and forth to previous channel) |
 | **P** | Picture-in-Picture (PiP floating mini-player) |
 | **R** | Instant Record live broadcast to Cloud PVR |

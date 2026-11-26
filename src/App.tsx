@@ -34,6 +34,7 @@ import { XtreamLoginModal } from './components/XtreamLoginModal';
 import { SportsCompanionBar } from './components/SportsCompanionBar';
 import { PvrRecordingsModal } from './components/PvrRecordingsModal';
 import { ParentalLockModal } from './components/ParentalLockModal';
+import { QuickSearchModal } from './components/QuickSearchModal';
 import { fetchXtreamLiveChannels } from './utils/xtreamClient';
 import {
   createRecordingFromProgram,
@@ -101,6 +102,7 @@ export const App: React.FC = () => {
   const [isMappingModalOpen, setIsMappingModalOpen] = useState<boolean>(false);
   const [isXtreamModalOpen, setIsXtreamModalOpen] = useState<boolean>(false);
   const [isSportsBarOpen, setIsSportsBarOpen] = useState<boolean>(false);
+  const [isQuickSearchOpen, setIsQuickSearchOpen] = useState<boolean>(false);
 
   // Dialing buffer for physical remote keys (0-9)
   const [dialedNumber, setDialedNumber] = useState<string>('');
@@ -598,13 +600,22 @@ export const App: React.FC = () => {
           setPendingLockedChannel(null);
           return;
         }
+        if (isQuickSearchOpen) {
+          setIsQuickSearchOpen(false);
+          return;
+        }
         if (activeTab !== 'home' && activeTab !== 'live') {
           setActiveTab('live');
           return;
         }
       }
 
-      // 3. Quick Shortcuts: Last Channel Recall (L), Instant Record (R), Sports (S)
+      // 3. Quick Shortcuts: Search (/), Last Channel Recall (L), Instant Record (R), Sports (S)
+      if (e.key === '/') {
+        e.preventDefault();
+        setIsQuickSearchOpen(true);
+        return;
+      }
       if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
         handleRecallLastChannel();
@@ -687,6 +698,7 @@ export const App: React.FC = () => {
         onOpenXtreamModal={() => setIsXtreamModalOpen(true)}
         onOpenSportsBar={() => setIsSportsBarOpen(true)}
         onOpenPvrModal={() => setIsPvrModalOpen(true)}
+        onOpenQuickSearch={() => setIsQuickSearchOpen(true)}
         activeRecordingsCount={recordings.filter((r) => r.status === 'recording').length}
       />
 
@@ -930,6 +942,16 @@ export const App: React.FC = () => {
             handleSelectChannel(pendingLockedChannel, true);
           }
         }}
+      />
+
+      {/* Phase 4: Universal Live Sports & Keyword Spotlight Search Modal */}
+      <QuickSearchModal
+        isOpen={isQuickSearchOpen}
+        onClose={() => setIsQuickSearchOpen(false)}
+        channels={channels}
+        epgPrograms={epgPrograms}
+        onSelectChannel={handleSelectChannel}
+        timeZone={timeZone}
       />
 
       {/* Cable Box Footer / Status Bar */}

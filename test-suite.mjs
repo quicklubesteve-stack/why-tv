@@ -12,9 +12,10 @@ import {
   updateRecordingsLifecycle,
   filterRecordings,
 } from './src/utils/pvrUtils.js';
+import { searchLiveContent } from './src/utils/searchEngine.js';
 
 console.log('======================================================');
-console.log('  WHY TV PHASE 3 COMPREHENSIVE VERIFICATION SUITE    ');
+console.log('  WHY TV PHASE 4 COMPREHENSIVE VERIFICATION SUITE    ');
 console.log('======================================================');
 
 let passedCount = 0;
@@ -338,8 +339,52 @@ recallLast();
 assert(curChannel.channelNumber === 108, 'Second recall jumped back to 108');
 
 // ---------------------------------------------------------
+// TEST SUITE 14: SEMANTIC LIVE CONTENT & SPORTS SEARCH ENGINE (PHASE 4)
+// ---------------------------------------------------------
+console.log('\n[Suite 14] Testing Live Content & Sports Search Engine...');
+
+// 1. Search for "football" (The exact user scenario)
+const footballResults = searchLiveContent('football', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(footballResults.length >= 2, `Searching "football" returns ${footballResults.length} matches (>= 2 required)`);
+
+// Live match detection
+const nflGame = footballResults.find(r => r.type === 'live_game' && r.title.includes('Chiefs'));
+assert(nflGame !== undefined, 'Found live NFL game fixture (Chiefs vs Bills) for query "football"');
+assert(nflGame.isLive === true, 'NFL game fixture is flagged with isLive: true');
+assert(nflGame.liveClockOrStatus.includes('4th'), 'NFL game fixture carries live period clock (4th quarter)');
+assert(nflGame.channel.channelNumber === 108, 'NFL game routes directly to broadcast channel CH 108');
+assert(nflGame.channel.url.startsWith('https://'), 'Game broadcast channel has valid playable stream URL');
+
+// Soccer football detection under "football"
+const soccerGame = footballResults.find(r => r.type === 'live_game' && r.title.includes('Arsenal'));
+assert(soccerGame !== undefined, 'Found Premier League football fixture (Arsenal vs Man City) for query "football"');
+assert(soccerGame.channel.channelNumber === 104, 'Arsenal match routes to DAZN / Extreme Sports CH 104');
+
+// 2. Search for "chiefs" (Team name keyword search)
+const chiefsResults = searchLiveContent('chiefs', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(chiefsResults.length >= 1, 'Searching team name "chiefs" finds matching live match');
+assert(chiefsResults[0].title.includes('Kansas City Chiefs'), 'Top match title contains Kansas City Chiefs');
+assert(chiefsResults[0].channel.name === 'Prime Sports Arena', 'Kansas City Chiefs match tunes to Prime Sports Arena');
+
+// 3. Search for "hockey" (Winter sports search)
+const hockeyResults = searchLiveContent('hockey', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(hockeyResults.length >= 1, 'Searching "hockey" returns live NHL hockey matches');
+const leafsMatch = hockeyResults.find(r => r.title.includes('Maple Leafs'));
+assert(leafsMatch !== undefined, 'Found Maple Leafs vs Canadiens game fixture under "hockey"');
+
+// 4. Search for "news"
+const newsResults = searchLiveContent('news', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(newsResults.length >= 3, `Searching "news" returns ${newsResults.length} live channels and shows`);
+const dwNews = newsResults.find(r => r.channel.channelNumber === 101);
+assert(dwNews !== undefined, 'Found DW News HD (CH 101) under "news" query');
+
+// 5. Empty query handling
+const emptyResults = searchLiveContent('', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(emptyResults.length === 0, 'Empty search query cleanly returns 0 results without errors');
+
+// ---------------------------------------------------------
 // FINAL AUDIT SUMMARY
 // ---------------------------------------------------------
 console.log('\n======================================================');
-console.log(`  PHASE 3 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
+console.log(`  PHASE 4 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
 console.log('======================================================\n');
