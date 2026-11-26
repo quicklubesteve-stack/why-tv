@@ -302,6 +302,8 @@ export const TiviMateView: React.FC<TiviMateViewProps> = ({
               currentProgram={currentProgram}
               nextProgram={upcomingPrograms[0]}
               timeZone={timeZone}
+              allChannels={channels}
+              onSelectChannel={onSelectChannel}
               onNextChannel={onNextChannel}
               onPrevChannel={onPrevChannel}
             />

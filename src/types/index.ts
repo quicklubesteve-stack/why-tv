@@ -10,6 +10,8 @@ export interface Channel {
   sourceId: string;
   sourceName: string;
   streamId?: string; // Xtream Codes stream ID if applicable
+  catchupDays?: number; // Days of catch-up available (e.g. 7 days like Bell Fibe / VMedia)
+  catchupType?: 'shift' | 'flussonic' | 'xc' | 'append';
 }
 
 export interface PlaylistSource {
@@ -130,4 +132,25 @@ export interface PlaybackState {
   isFullscreen: boolean;
   volume: number;
   isMuted: boolean;
+}
+
+export interface StreamDiagnostics {
+  resolution: string;
+  bitrateKbps: number;
+  fps: number;
+  bufferLengthSec: number;
+  videoCodec: string;
+  audioCodec: string;
+  droppedFrames: number;
+  latencySec?: number;
+  levelIndex?: number;
+}
+
+export interface CatchupCalculation {
+  canRestart: boolean;
+  elapsedSec: number;
+  totalSec: number;
+  progressPercent: number;
+  startTimeIso: string;
+  restartUrl?: string;
 }

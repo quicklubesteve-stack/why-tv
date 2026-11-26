@@ -12,17 +12,31 @@ import {
   Radio,
   Tv,
   Subtitles,
-  ExternalLink,
-  Info,
+  Activity,
+  List,
+  Rewind,
+  Zap,
+  X,
+  Check,
+  Clock,
 } from 'lucide-react';
-import { Channel, EpgProgram, PlaybackState, TimeZoneSetting } from '../types';
+import { Channel, EpgProgram, PlaybackState, TimeZoneSetting, StreamDiagnostics } from '../types';
 import { formatTimeInZone, getProgramProgress } from '../utils/dateUtils';
+import {
+  createDefaultDiagnostics,
+  formatBitrate,
+  formatBuffer,
+  calculateStreamHealth,
+} from '../utils/streamDiagnostics';
+import { calculateProgramTimeshift, formatDuration } from '../utils/catchupUtils';
 
 interface PlayerProps {
   channel: Channel | null;
   currentProgram?: EpgProgram;
   nextProgram?: EpgProgram;
   timeZone: TimeZoneSetting;
+  allChannels?: Channel[];
+  onSelectChannel?: (channel: Channel) => void;
   onClose?: () => void;
   onNextChannel?: () => void;
   onPrevChannel?: () => void;
@@ -33,6 +47,8 @@ export const Player: React.FC<PlayerProps> = ({
   currentProgram,
   nextProgram,
   timeZone,
+  allChannels = [],
+  onSelectChannel,
   onClose,
   onNextChannel,
   onPrevChannel,
@@ -51,20 +67,27 @@ export const Player: React.FC<PlayerProps> = ({
   const [captionsActive, setCaptionsActive] = useState<boolean>(false);
   const [availableSubtitles, setAvailableSubtitles] = useState<number>(0);
 
+  // Phase 1 Features:
+  const [showDiagnostics, setShowDiagnostics] = useState<boolean>(false);
+  const [diagnostics, setDiagnostics] = useState<StreamDiagnostics>(createDefaultDiagnostics);
+  const [showMiniGuide, setShowMiniGuide] = useState<boolean>(false);
+  const [isRestarted, setIsRestarted] = useState<boolean>(false);
+  const [restartedOffsetSec, setRestartedOffsetSec] = useState<number>(0);
+
   const [errorState, setErrorState] = useState<{
     type: 'cors' | 'offline' | 'codec' | 'generic';
     message: string;
     details: string;
   } | null>(null);
 
-  // Auto-hide OSD after 5 seconds of inactivity
+  // Auto-hide OSD after 5.5 seconds of inactivity
   const osdTimerRef = useRef<number | null>(null);
   const pingOsd = () => {
     setShowOsd(true);
     if (osdTimerRef.current) clearTimeout(osdTimerRef.current);
     osdTimerRef.current = window.setTimeout(() => {
       setShowOsd(false);
-    }, 5500);
+    }, 6000);
   };
 
   // Fullscreen change listener
@@ -76,6 +99,48 @@ export const Player: React.FC<PlayerProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
+  // Diagnostics Poller
+  useEffect(() => {
+    if (!videoRef.current) return;
+    const interval = setInterval(() => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      // Calculate buffer length
+      let bufferLength = 0;
+      if (video.buffered && video.buffered.length > 0) {
+        for (let i = 0; i < video.buffered.length; i++) {
+          if (
+            video.currentTime >= video.buffered.start(i) &&
+            video.currentTime <= video.buffered.end(i)
+          ) {
+            bufferLength = video.buffered.end(i) - video.currentTime;
+            break;
+          }
+        }
+      }
+
+      // Dropped frames check
+      let dropped = 0;
+      const vq = (video as any).getVideoPlaybackQuality?.();
+      if (vq) {
+        dropped = vq.droppedVideoFrames || 0;
+      }
+
+      setDiagnostics((prev) => ({
+        ...prev,
+        bufferLengthSec: bufferLength,
+        droppedFrames: dropped,
+        resolution:
+          video.videoWidth && video.videoHeight
+            ? `${video.videoWidth}x${video.videoHeight}`
+            : prev.resolution,
+      }));
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Main stream loading & HLS lifecycle
   useEffect(() => {
     if (!channel || !videoRef.current) return;
@@ -83,9 +148,13 @@ export const Player: React.FC<PlayerProps> = ({
     const video = videoRef.current;
     setErrorState(null);
     setIsBuffering(true);
+    setIsRestarted(false);
+    setRestartedOffsetSec(0);
     pingOsd();
 
-    // Clean up previous HLS instance
+    // Reset default diagnostics
+    setDiagnostics(createDefaultDiagnostics());
+
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -129,6 +198,32 @@ export const Player: React.FC<PlayerProps> = ({
           });
       });
 
+      hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+        const level = hls.levels[data.level];
+        if (level) {
+          setDiagnostics((prev) => ({
+            ...prev,
+            resolution: `${level.width}x${level.height}`,
+            bitrateKbps: Math.round(level.bitrate / 1000),
+            videoCodec: level.videoCodec || 'H.264',
+            audioCodec: level.audioCodec || 'AAC',
+            fps: level.frameRate || 30,
+            levelIndex: data.level,
+          }));
+        }
+      });
+
+      hls.on(Hls.Events.FRAG_LOADED, (_, data) => {
+        const stats = (data as any)?.stats || (data as any)?.frag?.stats;
+        if (stats && stats.bwEstimate) {
+          const estKbps = Math.round(stats.bwEstimate / 1000);
+          setDiagnostics((prev) => ({
+            ...prev,
+            bitrateKbps: prev.bitrateKbps > 0 ? prev.bitrateKbps : estKbps,
+          }));
+        }
+      });
+
       hls.on(Hls.Events.SUBTITLE_TRACKS_UPDATED, (_, data) => {
         setAvailableSubtitles(data.subtitleTracks.length);
       });
@@ -138,13 +233,12 @@ export const Player: React.FC<PlayerProps> = ({
           setIsBuffering(false);
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              // Typical CORS or 404/offline failure
               if (data.response && data.response.code === 0) {
                 setErrorState({
                   type: 'cors',
                   message: 'Provider blocked browser playback (CORS Restriction)',
                   details:
-                    'This IPTV provider does not allow direct cross-origin playback in web browsers. Use a CORS proxy or an authorized stream URL.',
+                    'This IPTV provider does not allow direct cross-origin playback in web browsers. Use the CORS Proxy toggle in Settings or upload the playlist as a file.',
                 });
               } else {
                 setErrorState({
@@ -188,6 +282,39 @@ export const Player: React.FC<PlayerProps> = ({
       }
     };
   }, [channel?.url]);
+
+  // Restart TV (Bell Fibe / VMedia Lookback style)
+  const timeshift = currentProgram
+    ? calculateProgramTimeshift(currentProgram.start, currentProgram.end)
+    : null;
+
+  const handleRestartTv = () => {
+    if (!videoRef.current || !timeshift) return;
+    const video = videoRef.current;
+
+    // Seek back to start of current program or beginning of available buffer
+    if (video.seekable && video.seekable.length > 0) {
+      const seekStart = video.seekable.start(0);
+      video.currentTime = seekStart;
+    } else {
+      video.currentTime = Math.max(0, video.currentTime - timeshift.elapsedSec);
+    }
+
+    setIsRestarted(true);
+    setRestartedOffsetSec(timeshift.elapsedSec);
+    pingOsd();
+  };
+
+  const handleGoLive = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    if (video.seekable && video.seekable.length > 0) {
+      video.currentTime = video.seekable.end(video.seekable.length - 1);
+    }
+    setIsRestarted(false);
+    setRestartedOffsetSec(0);
+    pingOsd();
+  };
 
   // Video event handlers
   const handlePlayPause = () => {
@@ -274,6 +401,7 @@ export const Player: React.FC<PlayerProps> = ({
   }
 
   const progress = currentProgram ? getProgramProgress(currentProgram.start, currentProgram.end) : 0;
+  const health = calculateStreamHealth(diagnostics.bufferLengthSec, diagnostics.droppedFrames);
 
   return (
     <div
@@ -304,11 +432,119 @@ export const Player: React.FC<PlayerProps> = ({
 
       {/* Buffering Indicator */}
       {isBuffering && !errorState && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-xs pointer-events-none">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-xs pointer-events-none z-20">
           <div className="w-14 h-14 border-4 border-amber-400 border-t-transparent rounded-full animate-spin shadow-cable-focus" />
           <span className="mt-3 text-amber-300 font-mono text-sm tracking-wider uppercase font-semibold">
             Tuning CH {channel.channelNumber}...
           </span>
+        </div>
+      )}
+
+      {/* Stream Diagnostics HUD (TiviMate style technical metrics) */}
+      {showDiagnostics && (
+        <div className="absolute top-16 right-4 z-40 bg-neutral-950/90 backdrop-blur-md border border-neutral-700/80 p-3.5 rounded-xl shadow-2xl font-mono text-xs text-slate-200 max-w-xs space-y-2 pointer-events-auto">
+          <div className="flex items-center justify-between border-b border-neutral-700 pb-1.5 text-amber-400 font-bold">
+            <div className="flex items-center space-x-1.5">
+              <Activity className="w-3.5 h-3.5" />
+              <span>STREAM DIAGNOSTICS</span>
+            </div>
+            <button
+              onClick={() => setShowDiagnostics(false)}
+              className="text-slate-400 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-1 text-[11px]">
+            <div className="flex justify-between">
+              <span className="text-slate-400">Resolution:</span>
+              <span className="font-bold text-white">{diagnostics.resolution}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Bitrate:</span>
+              <span className="font-bold text-white">{formatBitrate(diagnostics.bitrateKbps)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Buffer Health:</span>
+              <span className={`font-bold ${health.color}`}>
+                {formatBuffer(diagnostics.bufferLengthSec)} ({health.label})
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Video / Audio:</span>
+              <span>{diagnostics.videoCodec} / {diagnostics.audioCodec}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-400">Dropped Frames:</span>
+              <span className={diagnostics.droppedFrames > 0 ? 'text-amber-400' : 'text-slate-300'}>
+                {diagnostics.droppedFrames}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Surfing Mini-Guide Drawer (TiviMate & Pluto TV style) */}
+      {showMiniGuide && allChannels.length > 0 && (
+        <div className="absolute inset-x-0 bottom-0 z-40 bg-neutral-950/95 backdrop-blur-md border-t border-cable-border p-4 shadow-2xl pointer-events-auto space-y-2 max-h-[48%] flex flex-col">
+          <div className="flex items-center justify-between pb-1 border-b border-neutral-800">
+            <div className="flex items-center space-x-2">
+              <List className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-bold font-mono text-white uppercase tracking-wider">
+                Quick Surfing Mini-Guide
+              </span>
+              <span className="text-[10px] text-slate-400">
+                (Click or press Enter to zap channel)
+              </span>
+            </div>
+            <button
+              onClick={() => setShowMiniGuide(false)}
+              className="text-xs text-slate-400 hover:text-white px-2 py-0.5 rounded bg-neutral-800"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="overflow-x-auto flex items-center space-x-3 py-1 no-scrollbar">
+            {allChannels.map((ch) => {
+              const isCur = ch.id === channel.id;
+              return (
+                <div
+                  key={ch.id}
+                  onClick={() => {
+                    onSelectChannel?.(ch);
+                    setShowMiniGuide(false);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  className={`shrink-0 w-44 p-2.5 rounded-xl border cursor-pointer transition flex items-center space-x-2.5 ${
+                    isCur
+                      ? 'bg-amber-400 text-neutral-950 border-amber-300 font-bold shadow-cable-focus'
+                      : 'bg-cable-900 border-neutral-800 hover:bg-cable-800 text-white'
+                  }`}
+                >
+                  <span
+                    className={`font-mono text-xs px-1.5 py-0.5 rounded font-black shrink-0 ${
+                      isCur ? 'bg-black text-amber-400' : 'bg-black text-amber-400'
+                    }`}
+                  >
+                    {ch.channelNumber}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h5 className="text-xs font-bold truncate">{ch.name}</h5>
+                    <span
+                      className={`text-[10px] block truncate ${
+                        isCur ? 'text-neutral-900' : 'text-slate-400'
+                      }`}
+                    >
+                      {ch.group}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -341,9 +577,6 @@ export const Player: React.FC<PlayerProps> = ({
               </button>
             )}
           </div>
-          <p className="text-xs text-slate-400 mt-4">
-            Tip: You can continue browsing the TV Guide or switch channels below anytime.
-          </p>
         </div>
       )}
 
@@ -356,7 +589,6 @@ export const Player: React.FC<PlayerProps> = ({
         {/* Top OSD Bar: Channel Branding & Stream Status */}
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3 bg-neutral-950/85 backdrop-blur-md border border-neutral-700/80 p-2.5 px-4 rounded-xl shadow-xl pointer-events-auto">
-            {/* Channel Logo */}
             {channel.logo ? (
               <img
                 src={channel.logo}
@@ -381,6 +613,11 @@ export const Player: React.FC<PlayerProps> = ({
                 <span className="text-[11px] font-semibold text-slate-300 bg-neutral-800 px-2 py-0.5 rounded border border-neutral-700">
                   {channel.group}
                 </span>
+                {isRestarted && (
+                  <span className="text-[10px] font-mono font-bold bg-amber-400 text-black px-1.5 py-0.2 rounded animate-pulse">
+                    RESTARTED (-{formatDuration(restartedOffsetSec)})
+                  </span>
+                )}
               </div>
               <span className="text-[11px] text-slate-400 block mt-0.5">
                 Source: {channel.sourceName}
@@ -388,27 +625,53 @@ export const Player: React.FC<PlayerProps> = ({
             </div>
           </div>
 
-          {/* Close / Minimize button if modal */}
-          {onClose && (
+          <div className="flex items-center space-x-2 pointer-events-auto">
+            {/* Quick Surfing Drawer Button */}
             <button
-              onClick={onClose}
-              className="pointer-events-auto bg-neutral-950/80 hover:bg-neutral-800 text-slate-300 hover:text-white p-2 rounded-lg border border-neutral-700 shadow cable-focus-ring"
-              title="Close Player"
+              onClick={() => setShowMiniGuide((prev) => !prev)}
+              className="bg-neutral-950/80 hover:bg-neutral-800 text-slate-300 hover:text-white px-3 py-2 rounded-lg border border-neutral-700 shadow text-xs flex items-center space-x-1.5 cable-focus-ring"
+              title="Channel Surfing Mini-Guide (G)"
             >
-              ✕
+              <List className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Channels</span>
             </button>
-          )}
+
+            {/* Diagnostics HUD Toggle */}
+            <button
+              onClick={() => setShowDiagnostics((prev) => !prev)}
+              className={`p-2 rounded-lg border shadow cable-focus-ring ${
+                showDiagnostics
+                  ? 'bg-amber-400 text-black border-amber-300'
+                  : 'bg-neutral-950/80 hover:bg-neutral-800 text-slate-300 hover:text-white border-neutral-700'
+              }`}
+              title="Stream Diagnostics HUD (D)"
+            >
+              <Activity className="w-4 h-4" />
+            </button>
+
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="bg-neutral-950/80 hover:bg-neutral-800 text-slate-300 hover:text-white p-2 rounded-lg border border-neutral-700 shadow cable-focus-ring"
+                title="Close Player"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Bottom OSD Bar: Program Info & Player Controls */}
         <div className="space-y-3 pointer-events-auto">
-          {/* Cable Program Banner */}
+          {/* Cable Program Banner with Restart TV Button */}
           {currentProgram && (
             <div className="bg-neutral-950/90 backdrop-blur-md border border-neutral-700/80 p-4 rounded-xl shadow-2xl">
               <div className="flex items-center justify-between gap-4">
                 <div className="min-w-0">
                   <div className="flex items-center space-x-2 text-xs text-amber-400 font-mono">
-                    <span className="uppercase font-bold tracking-wider">NOW PLAYING</span>
+                    <span className="uppercase font-bold tracking-wider">
+                      {isRestarted ? 'RESTART PLAYBACK' : 'NOW PLAYING'}
+                    </span>
                     <span>•</span>
                     <span>
                       {formatTimeInZone(currentProgram.start, timeZone)} - {formatTimeInZone(currentProgram.end, timeZone)}
@@ -430,15 +693,39 @@ export const Player: React.FC<PlayerProps> = ({
                   )}
                 </div>
 
-                {/* Next Program Teaser */}
-                {nextProgram && (
-                  <div className="hidden lg:block text-right pl-4 border-l border-neutral-700 shrink-0">
-                    <span className="text-[10px] uppercase font-mono text-slate-400">UP NEXT ({formatTimeInZone(nextProgram.start, timeZone)})</span>
-                    <p className="text-xs font-semibold text-slate-200 truncate max-w-[200px] mt-0.5">
-                      {nextProgram.title}
-                    </p>
-                  </div>
-                )}
+                {/* Restart TV & Go Live Button (Bell Fibe / VMedia style) */}
+                <div className="flex items-center space-x-2 shrink-0">
+                  {isRestarted ? (
+                    <button
+                      onClick={handleGoLive}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-bold rounded-lg shadow cable-focus-ring animate-pulse"
+                      title="Jump back to live broadcast edge"
+                    >
+                      <Zap className="w-3.5 h-3.5 fill-current" />
+                      <span>GO LIVE</span>
+                    </button>
+                  ) : timeshift && timeshift.canRestart ? (
+                    <button
+                      onClick={handleRestartTv}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-neutral-950 font-mono text-xs font-bold rounded-lg shadow-cable-focus cable-focus-ring"
+                      title="Restart show from the beginning (Bell Fibe style)"
+                    >
+                      <Rewind className="w-3.5 h-3.5 fill-current" />
+                      <span>Restart Show</span>
+                    </button>
+                  ) : null}
+
+                  {nextProgram && (
+                    <div className="hidden lg:block text-right pl-3 border-l border-neutral-700 shrink-0">
+                      <span className="text-[10px] uppercase font-mono text-slate-400">
+                        UP NEXT ({formatTimeInZone(nextProgram.start, timeZone)})
+                      </span>
+                      <p className="text-xs font-semibold text-slate-200 truncate max-w-[180px] mt-0.5">
+                        {nextProgram.title}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Program Timeline Progress Bar */}
@@ -453,7 +740,6 @@ export const Player: React.FC<PlayerProps> = ({
 
           {/* Cable Controls Toolbar */}
           <div className="flex items-center justify-between bg-neutral-950/85 backdrop-blur-md border border-neutral-700/80 px-4 py-2.5 rounded-xl shadow-2xl">
-            {/* Play/Pause & Channel Flippers */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={handlePlayPause}

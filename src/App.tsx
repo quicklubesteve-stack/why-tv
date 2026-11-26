@@ -578,6 +578,8 @@ export const App: React.FC = () => {
                     currentProgram={currentPlayingProgram}
                     nextProgram={nextPlayingProgram}
                     timeZone={timeZone}
+                    allChannels={channels}
+                    onSelectChannel={handleSelectChannel}
                     onNextChannel={handleNextChannel}
                     onPrevChannel={handlePrevChannel}
                   />
@@ -622,6 +624,8 @@ export const App: React.FC = () => {
                     currentProgram={currentPlayingProgram}
                     nextProgram={nextPlayingProgram}
                     timeZone={timeZone}
+                    allChannels={channels}
+                    onSelectChannel={handleSelectChannel}
                     onNextChannel={handleNextChannel}
                     onPrevChannel={handlePrevChannel}
                   />
