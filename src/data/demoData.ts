@@ -512,78 +512,406 @@ export const DEMO_CHANNELS: Channel[] = [
   }
 ];
 
+interface ChannelScheduleDef {
+  liveTitle: string;
+  liveDesc: string;
+  category: string;
+  upcoming: { title: string; desc: string; category: string; durationMin?: number }[];
+  past: { title: string; desc: string; category: string; durationMin?: number }[];
+}
+
+const DEDICATED_CHANNEL_SCHEDULES: Record<number, ChannelScheduleDef> = {
+  // 108: Prime Sports Arena -> Live Sunday NFL Football: Chiefs vs Bills
+  108: {
+    liveTitle: 'NFL Live Sunday Football: Kansas City Chiefs vs Buffalo Bills',
+    liveDesc: 'Patrick Mahomes leads the Chiefs against Josh Allen and the Bills in a prime-time AFC showdown. Live 4th quarter action.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'NFL Sunday Night Football: Detroit Lions vs Green Bay Packers', desc: 'NFC North rivals clash under the stadium lights at Lambeau Field.', category: 'Sports', durationMin: 180 },
+      { title: 'NFL GameDay Final & Post-Game Press Conferences', desc: 'Highlights, scores, and coach reactions from around the National Football League.', category: 'Sports', durationMin: 60 },
+      { title: 'NFL Total Access & Playoff Picture', desc: 'Wildcard race analysis, injury updates, and division race breakdowns.', category: 'Sports', durationMin: 60 },
+      { title: 'Good Morning Football: Monday Highlights Reel', desc: 'Top plays, mic\'d up segments, and power rankings.', category: 'Sports', durationMin: 120 },
+    ],
+    past: [
+      { title: 'NFL GameDay Kickoff Live', desc: 'In-stadium pre-game warmups, injury reports, and weather forecasts.', category: 'Sports', durationMin: 60 },
+      { title: 'Sunday NFL Countdown: Expert Predictions', desc: 'Analysts debate key match-ups, fantasy picks, and game plans.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 126: NFL RedZone Network -> Live RedZone Quad Box
+  126: {
+    liveTitle: 'NFL RedZone Live: Every Touchdown from Every Sunday Game',
+    liveDesc: 'Host Scott Hanson takes you through every snap, field goal, and goal-line battle live commercial-free.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'NFL RedZone: Sunday Afternoon Quad Box & Blitz', desc: 'Simultaneous 4-game split coverage of late afternoon NFL kickoffs.', category: 'Sports', durationMin: 180 },
+      { title: 'NFL RedZone Final Drive: The Witching Hour', desc: 'Every fourth-quarter touchdown and dramatic finish from around the league.', category: 'Sports', durationMin: 60 },
+      { title: 'NFL RedZone Highlights & GameDay Wrap-Up', desc: 'Continuous loop of every single touchdown scored across Sunday football.', category: 'Sports', durationMin: 120 },
+      { title: 'NFL Fantasy Live: Week-in-Review Stats', desc: 'Top fantasy performers, waiver wire recommendations, and yardage leaders.', category: 'Sports', durationMin: 60 },
+    ],
+    past: [
+      { title: 'NFL RedZone Pre-Flight: Sunday Game Previews', desc: 'Lineups, weather radar, and inactive lists heading into 1:00 PM kickoffs.', category: 'Sports', durationMin: 60 },
+      { title: 'NFL GameDay Morning: First Look', desc: 'Opening analysis and tailgate reports across the country.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 122: TSN 1 Sports Center -> CFL Football Live
+  122: {
+    liveTitle: 'CFL Football Live: Winnipeg Blue Bombers vs BC Lions',
+    liveDesc: 'Zach Collaros leads the Blue Bombers against Vernon Adams Jr and the BC Lions in high-stakes CFL action.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'SportsCentre with Jay & Dan Live', desc: 'Canada\'s flagship sports highlights show with daily top 10 plays and hilarious commentary.', category: 'Sports', durationMin: 60 },
+      { title: 'CFL GameDay Post-Game Wrap & Analysis', desc: 'Interviews with winning coaches, Grey Cup playoff implications, and standings.', category: 'Sports', durationMin: 60 },
+      { title: 'TSN SportsCentre Overnight Edition', desc: 'Continuous Canadian sports scores, curling updates, and NHL highlights.', category: 'Sports', durationMin: 180 },
+      { title: 'That\'s Hockey 2Night: NHL Breakdown', desc: 'Comprehensive coverage of Canadian NHL franchises with TSN Insiders.', category: 'Sports', durationMin: 60 },
+    ],
+    past: [
+      { title: 'CFL Pre-Game Kickoff Live', desc: 'Field conditions, starting quarterbacks, and keys to victory.', category: 'Sports', durationMin: 60 },
+      { title: 'TSN SportsCentre Morning Broadcast', desc: 'Overnight scores and morning headlines from across the sports world.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 129: Stadium Live Sports -> College Football Live
+  129: {
+    liveTitle: 'College Football Live: Michigan Wolverines vs Ohio State Buckeyes',
+    liveDesc: 'The greatest rivalry in NCAA college football kicks off live with national championship playoff seeding on the line.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'NCAA Football Post-Game Live & College GameDay Wrap', desc: 'Locker room speeches, AP Poll impacts, and Bowl game scenarios.', category: 'Sports', durationMin: 60 },
+      { title: 'Stadium College Basketball Saturday Showcase', desc: 'NCAA Division I college hoops action and conference tournament previews.', category: 'Sports', durationMin: 120 },
+      { title: 'Inside College Athletics: The Big Ten Report', desc: 'In-depth feature on athletic programs, recruits, and coaches.', category: 'Sports', durationMin: 60 },
+      { title: 'Stadium Sports Overnight Blitz', desc: 'Continuous loop of top college sports highlights from around the nation.', category: 'Sports', durationMin: 180 },
+    ],
+    past: [
+      { title: 'College GameDay Tailgate Live', desc: 'Live from the campus quad with guest pickers and student crowds.', category: 'Sports', durationMin: 60 },
+      { title: 'Stadium Pre-Game Huddle', desc: 'Tactical film study and key player matchups.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 124: DAZN Premier Football -> Premier League Live: Arsenal vs Man City
+  124: {
+    liveTitle: 'Premier League Football Live: Arsenal vs Manchester City',
+    liveDesc: 'Mikel Arteta\'s Gunners face Pep Guardiola\'s champions in a colossal clash live from Emirates Stadium.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'UEFA Champions League Showcase: Liverpool vs Real Madrid', desc: 'European football titans clash under the floodlights in a classic European tie.', category: 'Sports', durationMin: 120 },
+      { title: 'Premier League Matchday Review & Highlights', desc: 'Every goal, contentious VAR decision, and tactical analysis from the weekend fixtures.', category: 'Sports', durationMin: 60 },
+      { title: 'DAZN Soccer Show: European Football Tactics', desc: 'Detailed heat maps, xG breakdowns, and post-match player interviews.', category: 'Sports', durationMin: 60 },
+      { title: 'Match of the Day: Extended Highlights', desc: 'In-depth commentary and analysis of Saturday and Sunday matches.', category: 'Sports', durationMin: 90 },
+    ],
+    past: [
+      { title: 'Premier League Saturday Warm-Up', desc: 'Pitchside build-up, lineup confirmation, and tactical previews.', category: 'Sports', durationMin: 60 },
+      { title: 'The Football Show: Premier League Preview', desc: 'Pundits debate title contenders and relegation six-pointers.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 127: CBS Sports Golazo Network -> Serie A Live: Inter vs Juventus
+  127: {
+    liveTitle: 'Serie A Live: Inter Milan vs Juventus Derby d\'Italia',
+    liveDesc: 'Derby d\'Italia live from San Siro. Lautaro Martinez and Inter battle the Bianconeri in a tense Italian classic.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'Morning Footy: European Soccer Tactics & Goals', desc: 'All the goals and analysis from Serie A, UEFA Champions League, and South American leagues.', category: 'Sports', durationMin: 120 },
+      { title: 'Box2Box: Global Football News Desk', desc: 'Transfer scoops, international tournament draws, and managerial news.', category: 'Sports', durationMin: 60 },
+      { title: 'CBS Golazo Highlights Showcase', desc: 'Every strike, free kick, and save from around the footballing globe.', category: 'Sports', durationMin: 90 },
+      { title: 'Attacking Third: Women\'s Soccer Focus', desc: 'NWSL and international women\'s football news and game breakdowns.', category: 'Sports', durationMin: 60 },
+    ],
+    past: [
+      { title: 'Calcio Live Pre-Match Show', desc: 'Atmosphere in Milan outside San Siro before the Derby d\'Italia.', category: 'Sports', durationMin: 60 },
+      { title: 'Italian Football Weekly', desc: 'Recap of midweek Coppa Italia action and league tables.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 120: Sportsnet East Live -> MLB Live: Blue Jays vs Yankees
+  120: {
+    liveTitle: 'MLB Live Baseball: Toronto Blue Jays vs New York Yankees',
+    liveDesc: 'Vladimir Guerrero Jr and the Blue Jays face AL East rivals New York Yankees at Rogers Centre.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'Blue Jays Central: Post-Game Live', desc: 'Instant reaction, locker room interviews, and pitching analysis from Rogers Centre.', category: 'Sports', durationMin: 60 },
+      { title: 'Sportsnet Connected: Baseball Tonight', desc: 'Around Major League Baseball highlights, walk-off home runs, and standings.', category: 'Sports', durationMin: 60 },
+      { title: 'MLB Classics: Historic Toronto Blue Jays Moments', desc: 'Relive historic franchise postseason games and milestone achievements.', category: 'Sports', durationMin: 120 },
+      { title: 'Sportsnet Central: Late Night National Edition', desc: 'Comprehensive Canadian and international sports scores and highlights.', category: 'Sports', durationMin: 120 },
+    ],
+    past: [
+      { title: 'Blue Jays Central Pre-Game Show', desc: 'Batting practice, starting pitchers report, and keys to the game.', category: 'Sports', durationMin: 60 },
+      { title: 'Sportsnet Connected Morning Edition', desc: 'Top highlights from overnight baseball and hockey matchups.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 121: Sportsnet Ontario HD -> NHL Live: Leafs vs Canadiens
+  121: {
+    liveTitle: 'NHL Hockey Live: Toronto Maple Leafs vs Montreal Canadiens',
+    liveDesc: 'Original Six rivalry live from Scotiabank Arena with Auston Matthews and Cole Caufield.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'Sportsnet Central: Leafs Post-Game Live', desc: 'Post-game reaction, head coach press conference, and three stars of the game.', category: 'Sports', durationMin: 60 },
+      { title: 'Hockey Central: Around the NHL', desc: 'Scores, trades, and goaltender matchups across the National Hockey League.', category: 'Sports', durationMin: 60 },
+      { title: 'NHL Tonight: Western Conference Showdown (Canucks vs Bruins)', desc: 'Late night game preview and highlights from Pacific Division match-ups.', category: 'Sports', durationMin: 150 },
+      { title: 'Sportsnet Connected: Overnight Hockey Loop', desc: 'Highlights of every goal scored across the NHL tonight.', category: 'Sports', durationMin: 120 },
+    ],
+    past: [
+      { title: 'Hockey Central at the Rink', desc: 'Pre-game skate, line combinations, and starting goaltenders.', category: 'Sports', durationMin: 60 },
+      { title: 'Scotiabank Wednesday Night Hockey Preview', desc: 'Expert roundtable analyzing the Maple Leafs roster.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 123: TSN 4 Hockey Zone -> NBA Basketball Live: Raptors vs Celtics
+  123: {
+    liveTitle: 'NBA Basketball Live: Toronto Raptors vs Boston Celtics',
+    liveDesc: 'Scottie Barnes and the Raptors host Jayson Tatum and the Boston Celtics live from Scotiabank Arena.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'Raptors Post-Up: Courtside Post-Game Live', desc: 'Player interviews, coach press conferences, and statistical analysis.', category: 'Sports', durationMin: 60 },
+      { title: 'NBA Tonight: Highlights Around the League', desc: 'Dunks, buzzer beaters, and standings from around the NBA.', category: 'Sports', durationMin: 60 },
+      { title: 'TSN SportsCentre: Late Edition', desc: 'Nightly recap of national Canadian sports action and global athletics.', category: 'Sports', durationMin: 120 },
+      { title: 'Basketball Roots: Canadian Hoops Documentary', desc: 'The rise of basketball in Canada from grassroots to the NBA.', category: 'Sports', durationMin: 60 },
+    ],
+    past: [
+      { title: 'Raptors Pre-Game Shootaround', desc: 'Warmup footage, injury reports, and match strategies.', category: 'Sports', durationMin: 60 },
+      { title: 'NBA Action Weekly', desc: 'Top 10 plays of the week and player features.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 125: DAZN Combat & Fight Zone -> UFC 312 Championship Live
+  125: {
+    liveTitle: 'UFC 312 Championship Main Card Live',
+    liveDesc: 'World title bouts and championship contenders collide inside the Octagon on DAZN Fight Zone.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'World Championship Boxing: Heavyweight Clash', desc: 'Championship boxing live on pay-per-view featuring undefeated title defenses.', category: 'Sports', durationMin: 120 },
+      { title: 'DAZN Fight Zone: Post-Fight Press Conference', desc: 'Instant post-fight reactions, knockouts of the night, and fighter interviews.', category: 'Sports', durationMin: 60 },
+      { title: 'The Modern Gladiators: Inside MMA Training', desc: 'Behind the scenes at premier mixed martial arts gyms.', category: 'Sports', durationMin: 60 },
+      { title: 'Knockout Kings: Best Finishes in Combat History', desc: 'Memorable knockouts and submission finishes.', category: 'Sports', durationMin: 90 },
+    ],
+    past: [
+      { title: 'UFC 312 Prelims & Octagon Countdown', desc: 'Early preliminary bouts and tale-of-the-tape breakdowns.', category: 'Sports', durationMin: 60 },
+      { title: 'DAZN Boxing Weigh-In Show', desc: 'Fighters hit the scales ahead of championship fight night.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 128: PGA TOUR & Golf 24/7 -> The Masters Final Round Live
+  128: {
+    liveTitle: 'PGA Tour Live: The Masters Tournament Final Round',
+    liveDesc: 'Scottie Scheffler, Rory McIlroy, and golf\'s elite battle through Amen Corner on championship Sunday.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'Amen Corner Live Shot Tracker & Leaderboard', desc: 'Featured group coverage of holes 11, 12, and 13 at Augusta National.', category: 'Sports', durationMin: 120 },
+      { title: 'Golf Central: Green Jacket Ceremony & Post-Round', desc: 'Trophy presentation, winner press conference, and tournament recap.', category: 'Sports', durationMin: 60 },
+      { title: 'Greatest Shots in Golf History', desc: 'A retrospective of legendary tournament-winning chip-ins and putts.', category: 'Sports', durationMin: 60 },
+      { title: 'PGA Tour Highlights: Season Best Drives', desc: 'Longest drives, bunker recoveries, and eagle putts.', category: 'Sports', durationMin: 90 },
+    ],
+    past: [
+      { title: 'Masters Sunday Breakfast at Augusta', desc: 'Course conditions, pin placements, and early round leaderboard.', category: 'Sports', durationMin: 60 },
+      { title: 'PGA Tour Practice Range Live', desc: 'Driving range swings and putting green prep.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 115: Apex Motorsport & Speed -> Formula 1 Grand Prix Live
+  115: {
+    liveTitle: 'Formula 1 Grand Prix Live: Race Day Coverage',
+    liveDesc: 'Max Verstappen, Charles Leclerc, and Lewis Hamilton battle from the starting lights to the chequered flag.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'F1 Post-Race Paddock Live & Podium Celebration', desc: 'Driver interviews in the media pen, trophy presentations, and constructor points.', category: 'Sports', durationMin: 60 },
+      { title: 'Speed Weekly: World Rally Championship Highlights', desc: 'High-speed gravel, snow, and tarmac stage action from around the world.', category: 'Sports', durationMin: 60 },
+      { title: 'Supercars & GT Championship Live', desc: 'Touring car sprint races and pit lane drama.', category: 'Sports', durationMin: 120 },
+      { title: 'Apex Motorsport Overnight Speed Loop', desc: 'Continuous loop of race finishes, on-board laps, and tire strategy reviews.', category: 'Sports', durationMin: 180 },
+    ],
+    past: [
+      { title: 'F1 Drivers Parade & National Anthem Ceremony', desc: 'Grid walk with Martin Brundle and celebrity pitlane interviews.', category: 'Sports', durationMin: 60 },
+      { title: 'Formula 1 Qualifying & Pole Position Shootout', desc: 'Q1, Q2, and Q3 fastest laps on fresh soft tires.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 104: Red Bull Action Sports -> Extreme Mountain Biking
+  104: {
+    liveTitle: 'Red Bull Rampage: Extreme Mountain Biking Live',
+    liveDesc: 'World elite freeriders drop into the Utah desert sandstone cliffs with massive natural drops and tricks.',
+    category: 'Sports',
+    upcoming: [
+      { title: 'Red Bull Cliff Diving World Series Live', desc: 'High divers leap from 27-meter platforms into open oceans across Europe.', category: 'Sports', durationMin: 120 },
+      { title: 'Action Sports Insider: Winter X Games Highlights', desc: 'Superpipe tricks, big air snowboarding, and medal ceremonies.', category: 'Sports', durationMin: 60 },
+      { title: 'Way of the Wildcard: Extreme Athlete Profiles', desc: 'Documentary on underdog extreme athletes striving for championship titles.', category: 'Sports', durationMin: 60 },
+      { title: 'Red Bull Flugtag: Crazy Flying Machines', desc: 'Hilarious homemade human-powered flying crafts launch into the water.', category: 'Sports', durationMin: 90 },
+    ],
+    past: [
+      { title: 'Red Bull Rampage Course Walk & Line Prep', desc: 'Athletes sculpt their private lines down the vertical cliff walls.', category: 'Sports', durationMin: 60 },
+      { title: 'Extreme Sports Morning Pulse', desc: 'Skate, surf, and BMX morning sessions.', category: 'Sports', durationMin: 90 },
+    ]
+  },
+  // 101: DW News HD
+  101: {
+    liveTitle: 'DW News: Global World Headlines Live',
+    liveDesc: 'Comprehensive real-time coverage of international breaking headlines, diplomatic summits, and global markets.',
+    category: 'News',
+    upcoming: [
+      { title: 'The Day: In-Depth Investigative Report', desc: 'Field investigations and interviews with international policymakers.', category: 'News', durationMin: 60 },
+      { title: 'Business Africa & Global Economy Focus', desc: 'Emerging tech hubs, market analysis, and economic indicators.', category: 'News', durationMin: 60 },
+      { title: 'DW News Nightly Roundup', desc: 'Evening recap of European and transatlantic developments.', category: 'News', durationMin: 60 },
+    ],
+    past: [
+      { title: 'DW Global Briefing', desc: 'Morning dispatch from Berlin, Brussels, and Washington bureaus.', category: 'News', durationMin: 60 },
+      { title: 'Conflict Zone: Hard Talk Interviews', desc: 'High-stakes diplomatic confrontations and interviews.', category: 'News', durationMin: 60 },
+    ]
+  },
+  // 134: CTV National News HD
+  134: {
+    liveTitle: 'CTV National News: Coast-to-Coast Live Report',
+    liveDesc: 'Canada\'s most-watched national newscast with top national headlines, parliamentary debates, and regional updates.',
+    category: 'News',
+    upcoming: [
+      { title: 'CTV News Channel: Primetime Panel', desc: 'Political correspondents analyze federal legislation and economic forecasts.', category: 'News', durationMin: 60 },
+      { title: 'W5: Canadian Investigative Journalism', desc: 'Hard-hitting documentary reports exposing consumer fraud and injustice.', category: 'News', durationMin: 60 },
+      { title: 'CTV National News Overnight Edition', desc: 'Continuous news updates for Canadian viewers coast to coast.', category: 'News', durationMin: 180 },
+    ],
+    past: [
+      { title: 'CTV News at 5: Regional Headlines', desc: 'Local news, radar forecasting, and traffic updates.', category: 'News', durationMin: 60 },
+      { title: 'Question Period with Vassy Kapelos', desc: 'Sunday morning political interviews and insider debate.', category: 'News', durationMin: 60 },
+    ]
+  },
+  // 135: Global News 24/7 National
+  135: {
+    liveTitle: 'Global National Live: Coast-to-Coast Edition',
+    liveDesc: 'Award-winning national reporting from Ottawa, Toronto, Calgary, and Vancouver bureaus.',
+    category: 'News',
+    upcoming: [
+      { title: 'The West Block: Political Sunday', desc: 'Interviews with cabinet ministers, premier debates, and national polling.', category: 'News', durationMin: 60 },
+      { title: 'Global News 24/7 Overnight Newsfeed', desc: 'Continuous rolling updates of Canadian and world news.', category: 'News', durationMin: 180 },
+    ],
+    past: [
+      { title: 'Global News Morning Digest', desc: 'Top national stories, financial news, and weather maps.', category: 'News', durationMin: 60 },
+      { title: 'Focus Ontario: Provincial Affairs', desc: 'Provincial parliament debates and regional healthcare discussions.', category: 'News', durationMin: 60 },
+    ]
+  },
+  // 130: Pluto TV Cinema Action
+  130: {
+    liveTitle: 'Action Cinema: Maximum Velocity (Feature Film)',
+    liveDesc: 'High-octane special forces operatives race against time through European capitals.',
+    category: 'Movies',
+    upcoming: [
+      { title: 'The Delta Contingent: Extraction Point', desc: 'Explosive covert operation deep behind enemy lines.', category: 'Movies', durationMin: 120 },
+      { title: 'Midnight Vigilante: City of Shadows', desc: 'Gritty street justice thriller in a dystopian metropolis.', category: 'Movies', durationMin: 120 },
+    ],
+    past: [
+      { title: 'Armored Siege: The Final Stand', desc: 'Heavy firepower action thriller guarding an isolated fortress.', category: 'Movies', durationMin: 120 },
+      { title: 'Tears of Steel: Director\'s Cut', desc: 'Sci-fi VFX thriller set in future Amsterdam.', category: 'Movies', durationMin: 90 },
+    ]
+  },
+};
+
 export function generateDynamicDemoEpg(channels: Channel[]): EpgProgram[] {
   const now = new Date();
   const programs: EpgProgram[] = [];
 
-  const programTemplates: Record<string, { title: string; desc: string; category: string }[]> = {
+  const genericCategoryTemplates: Record<string, { title: string; desc: string; category: string }[]> = {
     News: [
       { title: 'Global News Hour Live', desc: 'Comprehensive coverage of international breaking headlines and market movements.', category: 'News' },
       { title: 'The World Today with Anchor Team', desc: 'In-depth investigative reports, field interviews, and diplomatic updates.', category: 'News' },
       { title: 'Prime Business & Financial Markets', desc: 'Stock indices, interest rate analysis, technology sector developments.', category: 'News' },
       { title: 'Nightly World Report', desc: 'Recap of global events, geopolitics, weather, and science news.', category: 'News' },
-      { title: 'Conflict & Resolution Focus', desc: 'Special documentary on international diplomacy and human rights.', category: 'Documentary' }
     ],
     Sports: [
-      { title: 'NFL Live Sunday Football: Chiefs vs Bills', desc: 'Patrick Mahomes leads the Chiefs against Josh Allen and the Bills in a prime-time AFC clash.', category: 'Sports' },
+      { title: 'NFL Live Sunday Football: Kansas City Chiefs vs Buffalo Bills', desc: 'Patrick Mahomes leads the Chiefs against Josh Allen and the Bills in prime time.', category: 'Sports' },
       { title: 'Premier League Football Live: Arsenal vs Man City', desc: 'Top of the table title showdown live from Emirates Stadium.', category: 'Sports' },
-      { title: 'Sunday Night Football: Lions vs Packers', desc: 'NFC North rivals clash in high-stakes football under the stadium lights.', category: 'Sports' },
-      { title: 'NHL Hockey Live: Leafs vs Canadiens', desc: 'Saturday night hockey original six rivalry live from Scotiabank Arena.', category: 'Sports' },
-      { title: 'Formula 1 Grand Prix Qualifying & Speed', desc: 'High-speed tarmac maneuvers, pit strategies, and driver profiles.', category: 'Sports' },
+      { title: 'Sportsnet Central: Highlights Tonight', desc: 'Daily Canadian sports recap and highlights.', category: 'Sports' },
       { title: 'Action Sports Insider & Extreme Games', desc: 'Behind the scenes with extreme sports athletes and upcoming tournaments.', category: 'Sports' },
-      { title: 'Global Football & Soccer Roundup', desc: 'Goals, controversy, and tactical analysis from the weekend leagues.', category: 'Sports' }
     ],
     Movies: [
       { title: 'Tears of Steel: Directors Cut', desc: 'Sci-fi post-apocalyptic VFX thriller set in future Amsterdam.', category: 'Movies' },
       { title: 'Sintel: The Dragon Huntress', desc: 'Epic fantasy adventure following a lonely wanderer searching for a lost baby dragon.', category: 'Movies' },
       { title: 'Cyberpunk 2088: Neon Horizon', desc: 'Futuristic detective noir through the shadowy underworld of megacities.', category: 'Movies' },
-      { title: 'The Starlight Odyssey', desc: 'Interstellar explorers face unprecedented temporal anomalies near a black hole.', category: 'Movies' }
+      { title: 'The Starlight Odyssey', desc: 'Interstellar explorers face unprecedented temporal anomalies near a black hole.', category: 'Movies' },
     ],
     Kids: [
       { title: 'Big Buck Bunny Adventure Hour', desc: 'A gentle giant woodland rabbit takes revenge on troublesome rodents.', category: 'Kids' },
       { title: 'Cosmo Racers: Rocket Academy', desc: 'Fun interactive animated space academy adventures for young dreamers.', category: 'Kids' },
       { title: 'Magic Forest Creatures', desc: 'Enchanted creatures learn teamwork, friendship, and problem-solving.', category: 'Kids' },
-      { title: 'Junior Science Lab Live', desc: 'Experiments, volcano making, and fun astronomy discoveries for kids.', category: 'Kids' }
     ],
     Local: [
       { title: 'NASA Space Station Live Link', desc: 'Direct live downlink from the Expedition crew aboard the ISS orbiting Earth.', category: 'Science' },
       { title: 'Greater Toronto City Update', desc: 'Transit news, municipal council debates, local culture, and community events.', category: 'Local' },
       { title: 'Regional Weather & Traffic Pulse', desc: 'Radar forecasting and commuter transit road conditions.', category: 'Local' },
-      { title: 'Ontario Heritage & Nature Trails', desc: 'Exploring provincial parks, lakes, and local conservation initiatives.', category: 'Documentary' }
     ],
     International: [
       { title: 'Le Journal International', desc: 'Edition spéciale d’actualité internationale francophone et reportages.', category: 'International' },
       { title: 'EuroPanorama Culture & Arts', desc: 'Music festivals, culinary journeys, and museum exhibitions across Europe.', category: 'Culture' },
-      { title: 'World Cinema Showcase', desc: 'Award-winning international indie features and foreign short films.', category: 'Movies' }
     ]
   };
 
-  const baseTime = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-  baseTime.setMinutes(baseTime.getMinutes() < 30 ? 0 : 30, 0, 0);
-
   channels.forEach((ch) => {
-    let cursor = new Date(baseTime);
-    const catList = programTemplates[ch.group] || programTemplates['News'];
-    let templateIdx = Math.abs(ch.channelNumber * 3) % catList.length;
+    const channelId = ch.tvgId || ch.id;
+    const dedicated = DEDICATED_CHANNEL_SCHEDULES[ch.channelNumber];
 
-    while (cursor.getTime() < now.getTime() + 20 * 60 * 60 * 1000) {
-      const durationMin = ((templateIdx % 2) === 0 ? 30 : 60);
-      const start = new Date(cursor);
-      const end = new Date(cursor.getTime() + durationMin * 60 * 1000);
-      const template = catList[templateIdx % catList.length];
+    // Determine current live show title & category
+    let liveTitle = `${ch.name} Live Broadcast`;
+    let liveDesc = `Live streaming broadcast from ${ch.sourceName || 'WHY TV Network'}.`;
+    let liveCategory = ch.group || 'General';
+    let upcomingList: { title: string; desc: string; category: string; durationMin?: number }[] = [];
+    let pastList: { title: string; desc: string; category: string; durationMin?: number }[] = [];
+
+    if (dedicated) {
+      liveTitle = dedicated.liveTitle;
+      liveDesc = dedicated.liveDesc;
+      liveCategory = dedicated.category;
+      upcomingList = dedicated.upcoming;
+      pastList = dedicated.past;
+    } else {
+      const fallbackList = genericCategoryTemplates[ch.group] || genericCategoryTemplates['News'];
+      liveTitle = `${ch.name}: ${fallbackList[0].title}`;
+      liveDesc = fallbackList[0].desc;
+      liveCategory = fallbackList[0].category;
+      upcomingList = fallbackList.slice(1).concat(fallbackList);
+      pastList = [
+        { title: `${ch.name} Morning Report`, desc: 'Early morning news and community loop.', category: liveCategory },
+        { title: `${ch.name} Early Broadcast`, desc: 'Pre-show analysis and broadcast warmup.', category: liveCategory },
+      ];
+    }
+
+    // 1. Generate Past Shows (Starts 3.5 hrs ago, ends 45 mins ago)
+    let pastCursor = new Date(now.getTime() - 210 * 60 * 1000); // 3.5 hrs ago
+    const liveStart = new Date(now.getTime() - 45 * 60 * 1000); // 45 mins ago
+    const liveEnd = new Date(now.getTime() + 75 * 60 * 1000);   // 75 mins in future (2 hr show total)
+
+    pastList.forEach((p, idx) => {
+      const dur = (p.durationMin || 75) * 60 * 1000;
+      const pStart = new Date(pastCursor);
+      const pEnd = new Date(Math.min(pastCursor.getTime() + dur, liveStart.getTime()));
+      if (pEnd.getTime() > pStart.getTime()) {
+        programs.push({
+          id: `epg_${channelId}_past_${idx}_${pStart.getTime()}`,
+          channelId,
+          title: p.title,
+          description: p.desc,
+          category: p.category,
+          start: pStart.toISOString(),
+          end: pEnd.toISOString(),
+        });
+        pastCursor = pEnd;
+      }
+    });
+
+    // 2. Generate CURRENT LIVE SHOW (Guaranteed to bracket Date.now())
+    programs.push({
+      id: `epg_${channelId}_live_${liveStart.getTime()}`,
+      channelId,
+      title: liveTitle,
+      description: liveDesc,
+      category: liveCategory,
+      start: liveStart.toISOString(),
+      end: liveEnd.toISOString(),
+    });
+
+    // 3. Generate Future Shows out to 24 hours
+    let futureCursor = new Date(liveEnd);
+    let upIdx = 0;
+    while (futureCursor.getTime() < now.getTime() + 24 * 60 * 60 * 1000) {
+      const templ = upcomingList[upIdx % upcomingList.length];
+      const durMin = templ.durationMin || ((upIdx % 2 === 0) ? 60 : 120);
+      const fStart = new Date(futureCursor);
+      const fEnd = new Date(futureCursor.getTime() + durMin * 60 * 1000);
 
       programs.push({
-        id: `epg_${ch.tvgId || ch.id}_${start.getTime()}`,
-        channelId: ch.tvgId || ch.id,
-        title: template.title,
-        description: template.desc,
-        category: template.category,
-        start: start.toISOString(),
-        end: end.toISOString(),
+        id: `epg_${channelId}_fut_${upIdx}_${fStart.getTime()}`,
+        channelId,
+        title: templ.title,
+        description: templ.desc,
+        category: templ.category,
+        start: fStart.toISOString(),
+        end: fEnd.toISOString(),
       });
 
-      cursor = end;
-      templateIdx++;
+      futureCursor = fEnd;
+      upIdx++;
     }
   });
 

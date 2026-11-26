@@ -171,11 +171,11 @@ const leafsGame = INITIAL_SPORTS_GAMES.find(g => g.id === 'game_nhl_1');
 assert(leafsGame !== undefined, 'Found Maple Leafs vs Canadiens game fixture');
 assert(leafsGame.homeTeam.score === 3 && leafsGame.awayTeam.score === 2, 'Live score state tracked accurately (TOR 3 - MTL 2)');
 assert(leafsGame.periodOrTime.includes('3rd'), 'Live period clock accurate');
-assert(leafsGame.channelNumber === 108, 'Broadcast channel tagged with channel number 108');
+assert(leafsGame.channelNumber === 121, 'Broadcast channel tagged with channel number 121 (Sportsnet Ontario HD)');
 
 // Channel tuning resolution from sports fixture
 const tunedChannel = DEMO_CHANNELS.find(c => c.channelNumber === leafsGame.channelNumber);
-assert(tunedChannel !== undefined && tunedChannel.name === 'Prime Sports Arena', 'Sports fixture successfully tunes to Prime Sports Arena (Ch 108)');
+assert(tunedChannel !== undefined && tunedChannel.name === 'Sportsnet Ontario HD', 'Sports fixture successfully tunes to Sportsnet Ontario HD (Ch 121)');
 
 // League filtering verification
 const nhlGames = INITIAL_SPORTS_GAMES.filter(g => g.league === 'NHL');
@@ -358,7 +358,26 @@ assert(nflGame.channel.url.startsWith('https://'), 'Game broadcast channel has v
 // Soccer football detection under "football"
 const soccerGame = footballResults.find(r => r.type === 'live_game' && r.title.includes('Arsenal'));
 assert(soccerGame !== undefined, 'Found Premier League football fixture (Arsenal vs Man City) for query "football"');
-assert(soccerGame.channel.channelNumber === 104, 'Arsenal match routes to DAZN / Extreme Sports CH 104');
+assert(soccerGame.channel.channelNumber === 124, 'Arsenal match routes to DAZN Premier Football (CH 124)');
+
+// ---------------------------------------------------------
+// VERIFY PROPER SHOWS AIRING ON PROPER CHANNELS (USER FIX)
+// ---------------------------------------------------------
+console.log('\n[User Fix Verification] Testing Proper Shows on Proper Football Channels...');
+const primeSportsEpg = epg.filter(p => p.channelId === 'Prime.Sports.Arena');
+const livePrimeShow = primeSportsEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+assert(livePrimeShow !== undefined, 'Found live active show on Prime Sports Arena right now');
+assert(livePrimeShow.title.includes('NFL Live Sunday Football') && livePrimeShow.title.includes('Chiefs'), `Live show on Prime Sports is NFL Sunday Football Chiefs vs Bills, got "${livePrimeShow.title}"`);
+
+const redzoneEpg = epg.filter(p => p.channelId === 'NFL.RedZone.Live');
+const liveRedzoneShow = redzoneEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+assert(liveRedzoneShow !== undefined, 'Found live active show on NFL RedZone right now');
+assert(liveRedzoneShow.title.includes('NFL RedZone Live'), `Live show on NFL RedZone is proper RedZone broadcast, got "${liveRedzoneShow.title}"`);
+
+const cflEpg = epg.filter(p => p.channelId === 'TSN.1.ca');
+const liveCflShow = cflEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+assert(liveCflShow !== undefined, 'Found live active show on TSN 1 right now');
+assert(liveCflShow.title.includes('CFL Football Live'), `Live show on TSN 1 is proper CFL Football broadcast, got "${liveCflShow.title}"`);
 
 // 2. Search for "chiefs" (Team name keyword search)
 const chiefsResults = searchLiveContent('chiefs', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);

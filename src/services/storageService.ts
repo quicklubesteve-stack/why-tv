@@ -235,14 +235,28 @@ export class StorageService {
       if (data) {
         const parsed: EpgProgram[] = JSON.parse(data);
         if (parsed && parsed.length > 0) {
-          return parsed;
+          const nowMs = Date.now();
+          // Check if parsed EPG contains valid live programs actively running right now
+          const hasActiveShows = parsed.some(
+            (p) => new Date(p.start).getTime() <= nowMs && new Date(p.end).getTime() > nowMs
+          );
+          // Check if it has programs for football and new sports channels
+          const coversSports = parsed.some(
+            (p) => p.title.toLowerCase().includes('chiefs') || p.title.toLowerCase().includes('football')
+          );
+
+          if (hasActiveShows && coversSports) {
+            return parsed;
+          }
         }
       }
     } catch (e) {
       console.error('Failed to load EPG programs', e);
     }
-    // Return generated dynamic programs
-    return generateDynamicDemoEpg(channels);
+    // Return freshly generated dynamic programs with aligned live shows and persist
+    const fresh = generateDynamicDemoEpg(channels);
+    this.saveEpgPrograms(fresh);
+    return fresh;
   }
 
   static saveEpgPrograms(programs: EpgProgram[]): void {
