@@ -31,6 +31,7 @@ interface TiviMateViewProps {
   timeZone: TimeZoneSetting;
   onNextChannel?: () => void;
   onPrevChannel?: () => void;
+  onOpenSportsBar?: () => void;
 }
 
 export const TiviMateView: React.FC<TiviMateViewProps> = ({
@@ -45,6 +46,7 @@ export const TiviMateView: React.FC<TiviMateViewProps> = ({
   timeZone,
   onNextChannel,
   onPrevChannel,
+  onOpenSportsBar,
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [channelSearch, setChannelSearch] = useState<string>('');
@@ -304,6 +306,7 @@ export const TiviMateView: React.FC<TiviMateViewProps> = ({
               timeZone={timeZone}
               allChannels={channels}
               onSelectChannel={onSelectChannel}
+              onOpenSportsBar={onOpenSportsBar}
               onNextChannel={onNextChannel}
               onPrevChannel={onPrevChannel}
             />

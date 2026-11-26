@@ -29,6 +29,7 @@ import { SettingsView } from './components/SettingsView';
 import { ChannelMappingModal } from './components/ChannelMappingModal';
 import { CategoryManagerModal } from './components/CategoryManagerModal';
 import { XtreamLoginModal } from './components/XtreamLoginModal';
+import { SportsCompanionBar } from './components/SportsCompanionBar';
 import { fetchXtreamLiveChannels } from './utils/xtreamClient';
 
 export const App: React.FC = () => {
@@ -75,6 +76,7 @@ export const App: React.FC = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
   const [isMappingModalOpen, setIsMappingModalOpen] = useState<boolean>(false);
   const [isXtreamModalOpen, setIsXtreamModalOpen] = useState<boolean>(false);
+  const [isSportsBarOpen, setIsSportsBarOpen] = useState<boolean>(false);
 
   // Dialing buffer for physical remote keys (0-9)
   const [dialedNumber, setDialedNumber] = useState<string>('');
@@ -481,6 +483,10 @@ export const App: React.FC = () => {
           setIsXtreamModalOpen(false);
           return;
         }
+        if (isSportsBarOpen) {
+          setIsSportsBarOpen(false);
+          return;
+        }
         if (activeTab !== 'home' && activeTab !== 'live') {
           setActiveTab('live');
           return;
@@ -551,6 +557,7 @@ export const App: React.FC = () => {
         dialedNumber={dialedNumber}
         favouritesCount={favourites.length}
         onOpenXtreamModal={() => setIsXtreamModalOpen(true)}
+        onOpenSportsBar={() => setIsSportsBarOpen(true)}
       />
 
       {/* 2. Main Viewport Container */}
@@ -580,6 +587,7 @@ export const App: React.FC = () => {
                     timeZone={timeZone}
                     allChannels={channels}
                     onSelectChannel={handleSelectChannel}
+                    onOpenSportsBar={() => setIsSportsBarOpen(true)}
                     onNextChannel={handleNextChannel}
                     onPrevChannel={handlePrevChannel}
                   />
@@ -615,6 +623,7 @@ export const App: React.FC = () => {
                 timeZone={timeZone}
                 onNextChannel={handleNextChannel}
                 onPrevChannel={handlePrevChannel}
+                onOpenSportsBar={() => setIsSportsBarOpen(true)}
               />
             ) : (
               <>
@@ -626,6 +635,7 @@ export const App: React.FC = () => {
                     timeZone={timeZone}
                     allChannels={channels}
                     onSelectChannel={handleSelectChannel}
+                    onOpenSportsBar={() => setIsSportsBarOpen(true)}
                     onNextChannel={handleNextChannel}
                     onPrevChannel={handlePrevChannel}
                   />
@@ -665,6 +675,7 @@ export const App: React.FC = () => {
             selectedChannel={currentChannel}
             onSelectChannel={handleSelectChannel}
             timeZone={timeZone}
+            onOpenSportsBar={() => setIsSportsBarOpen(true)}
           />
         )}
 
@@ -741,6 +752,15 @@ export const App: React.FC = () => {
           onClose={() => setIsXtreamModalOpen(false)}
         />
       )}
+
+      {/* Rogers Xfinity & Sportsnet+ Live Scores Companion Bar */}
+      <SportsCompanionBar
+        isOpen={isSportsBarOpen}
+        onClose={() => setIsSportsBarOpen(false)}
+        channels={channels}
+        onSelectChannel={handleSelectChannel}
+        currentChannelNumber={currentChannel?.channelNumber}
+      />
 
       {/* Cable Box Footer / Status Bar */}
       <footer className="border-t border-cable-border/60 bg-cable-950/80 py-4 px-6 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto w-full">

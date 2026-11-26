@@ -11,6 +11,7 @@ import {
   Grid,
   Layout,
   Server,
+  Trophy,
 } from 'lucide-react';
 import { TimeZoneSetting, UiThemeMode } from '../types';
 import { formatTimeInZone } from '../utils/dateUtils';
@@ -26,6 +27,7 @@ interface HeaderNavProps {
   dialedNumber?: string;
   favouritesCount: number;
   onOpenXtreamModal: () => void;
+  onOpenSportsBar?: () => void;
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -39,6 +41,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   dialedNumber,
   favouritesCount,
   onOpenXtreamModal,
+  onOpenSportsBar,
 }) => {
   const [currentTime, setCurrentTime] = useState<string>('');
 
@@ -153,8 +156,21 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
           })}
         </nav>
 
-        {/* Right Tools: UI Theme Switcher & Xtream / Clock */}
+        {/* Right Tools: UI Theme Switcher, Sports Bar & Xtream / Clock */}
         <div className="flex items-center space-x-2 shrink-0">
+          {/* Sports Companion Bar Trigger */}
+          {onOpenSportsBar && (
+            <button
+              onClick={onOpenSportsBar}
+              className="flex items-center space-x-1.5 bg-gradient-to-r from-red-950/80 to-amber-950/80 hover:from-red-900 hover:to-amber-900 border border-amber-500/50 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold text-amber-300 shadow cable-focus-ring"
+              title="Rogers Xfinity & Sportsnet+ Live Scores Companion Bar"
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Sports</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+            </button>
+          )}
+
           {/* UI Layout Switcher Button */}
           <button
             onClick={cycleUiTheme}

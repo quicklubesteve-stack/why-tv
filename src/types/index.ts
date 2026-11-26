@@ -154,3 +154,27 @@ export interface CatchupCalculation {
   startTimeIso: string;
   restartUrl?: string;
 }
+
+export type SportLeague = 'NHL' | 'NBA' | 'SOCCER' | 'MLB' | 'NFL' | 'MOTORSPORT';
+
+export interface SportsTeam {
+  name: string;
+  abbreviation: string;
+  score: number;
+  logo?: string;
+  record?: string;
+}
+
+export interface SportsGame {
+  id: string;
+  league: SportLeague;
+  homeTeam: SportsTeam;
+  awayTeam: SportsTeam;
+  status: 'live' | 'upcoming' | 'final';
+  periodOrTime: string;
+  statsSnippet?: string;
+  broadcaster?: string;
+  channelNumber?: number;
+  channelId?: string;
+  startTime?: string;
+}

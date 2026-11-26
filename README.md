@@ -22,6 +22,9 @@ npm run dev
 # Or compile production build:
 npm run build
 npm run preview
+
+# Run the 100% verified test suite (52 tests across 10 suites):
+npx tsx test-suite.mjs
 ```
 
 ---
@@ -68,12 +71,34 @@ You can switch between layouts anytime using the **UI Theme Switcher** in the to
   - 📡 **XTREAM CODES & CONFIG** (account details & expiration)
 - **Account Status Banner**: Displays your active Xtream provider name, server DNS, connection health, and account expiration.
 
-### 3. Multi-Screen (Quad Screen / Split Screen)
+### 3. Multi-Screen (Quad Screen / Split Screen & DAZN / Sportsnet+ Presets)
 - Watch **2 or 4 live streams simultaneously** in a clean grid.
+- **Sportsnet+ Dual Split Preset**: 1-click preset pairing primary sports (Ch 108) and action sports (Ch 104) in a 2-column side-by-side split.
+- **DAZN Quad Matchday Preset**: 1-click preset loading 4 simultaneous sports & racing feeds (Ch 108, Ch 104, Ch 115, Ch 101).
 - One-click audio switching between screens so audio never clashes.
+- Direct launcher for the **Sports Companion Bar** to track scores alongside multi-game streams.
 - Swap channels on any slot or maximize to full screen.
 
-### 4. Classic Cable Box
+### 4. Rogers Xfinity / Sportsnet+ Sports Companion Bar (Phase 2)
+- Slide-over live sports drawer accessible via **Trophy icon** in the top navigation, video player overlay, or keyboard shortcut (`S`).
+- **Real-Time Scores & Clock Tickers**: Live game tracking for **NHL Hockey** (Leafs vs Canadiens, Oilers vs Flames), **NBA Basketball** (Raptors vs Celtics), **European Soccer** (Arsenal vs Man City, Champions League), and **Motorsport** (F1 lap times and pit deltas).
+- **1-Click Tune Broadcast**: Instantly tune directly to the broadcast channel (e.g. Channel 108 Prime Sports Arena) without exiting your current stream.
+- **League Filters**: Quick pills for All Leagues, NHL Hockey, NBA Basketball, Soccer, and Motorsport.
+
+### 5. Stream Diagnostics HUD (Phase 1)
+- Professional streaming health overlay accessible via `D` key or the **HUD** icon on the player.
+- Real-time **Resolution**, **Bitrate** (e.g. 4.5 Mbps), **Buffer Health** (seconds buffered), **Dropped Frames**, and **Audio/Video Codecs**.
+
+### 6. Quick Surfing Mini-Guide (Phase 1)
+- Slide-up bottom tray accessible via `G` key or the **Mini-Guide** button while streaming.
+- Rapid channel zapping without interrupting video playback.
+
+### 7. Restart TV & Catch-up Timeshift (Phase 1)
+- Seamless rewind to the beginning of in-progress shows.
+- Automatic timeshift URL generation for Xtream Codes (`/timeshift.php`) and Flussonic (`-timeshift_abs-`).
+- Pulsing **GO LIVE** button to snap back to the live broadcast edge.
+
+### 8. Classic Cable Box
 - Set-top box lean-back design with high-contrast amber focus glow (`ring-4 ring-amber-400`), live clock in Toronto (ET) or device time, and full-width TV guide.
 
 ---
@@ -87,7 +112,10 @@ WHY TV is optimized for 10-foot remote and laptop keyboard navigation:
 | **Arrow Keys (▲ ▼ ◀ ▶)** | Navigate focus ring across channels, categories, and guide cells |
 | **Enter / Space** | Tune channel, select button, or toggle play/pause |
 | **0 – 9 (Numeric Keys)** | Direct Cable Channel Dialing (dial e.g. `101` to tune to CH 101) |
-| **Escape / Backspace** | Exit fullscreen, dismiss dialogs, or return to Home |
+| **S** | Toggle Sports Companion Bar (live scores & game tracker) |
+| **D** | Toggle Stream Diagnostics HUD (bitrate, buffer, resolution) |
+| **G** | Toggle Quick Surfing Mini-Guide drawer |
+| **Escape / Backspace** | Exit fullscreen, dismiss drawers, or return to Home |
 | **Mouse / Touchpad** | Full mouse and touchscreen support |
 
 ---

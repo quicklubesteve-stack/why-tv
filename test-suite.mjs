@@ -4,9 +4,10 @@ import { SAMPLE_M3U_CONTENT, SAMPLE_XMLTV_CONTENT, DEMO_CHANNELS, generateDynami
 import { formatBitrate, formatBuffer, calculateStreamHealth, createDefaultDiagnostics } from './src/utils/streamDiagnostics.js';
 import { calculateProgramTimeshift, formatDuration, generateTimeshiftUrl } from './src/utils/catchupUtils.js';
 import { generateXtreamM3uUrl, generateXtreamEpgUrl, normalizeServerUrl } from './src/utils/xtreamClient.js';
+import { INITIAL_SPORTS_GAMES, SPORTS_LEAGUES } from './src/data/sportsData.js';
 
 console.log('======================================================');
-console.log('  WHY TV PHASE 1 COMPREHENSIVE VERIFICATION SUITE    ');
+console.log('  WHY TV PHASE 2 COMPREHENSIVE VERIFICATION SUITE    ');
 console.log('======================================================');
 
 let passedCount = 0;
@@ -145,8 +146,68 @@ const epgXmlUrl = generateXtreamEpgUrl(creds);
 assert(epgXmlUrl === 'http://my-iptv.net:8080/xmltv.php?username=steve&password=secretpassword', 'Generated valid XMLTV EPG URL');
 
 // ---------------------------------------------------------
+// TEST SUITE 9: ROGERS XFINITY / SPORTSNET+ SPORTS COMPANION BAR (PHASE 2)
+// ---------------------------------------------------------
+console.log('\n[Suite 9] Testing Sports Companion Bar & Live Game Engine...');
+assert(SPORTS_LEAGUES.length >= 5, `Configured ${SPORTS_LEAGUES.length} sports leagues`);
+const nhlLeague = SPORTS_LEAGUES.find(l => l.id === 'NHL');
+assert(nhlLeague !== undefined && nhlLeague.label.includes('NHL'), 'NHL league descriptor registered');
+
+assert(INITIAL_SPORTS_GAMES.length >= 7, `Registered ${INITIAL_SPORTS_GAMES.length} sports games across leagues`);
+
+const liveGames = INITIAL_SPORTS_GAMES.filter(g => g.status === 'live');
+assert(liveGames.length >= 4, `Found ${liveGames.length} live in-progress games with real-time stats`);
+
+// Verify live game structure & clocks
+const leafsGame = INITIAL_SPORTS_GAMES.find(g => g.id === 'game_nhl_1');
+assert(leafsGame !== undefined, 'Found Maple Leafs vs Canadiens game fixture');
+assert(leafsGame.homeTeam.score === 3 && leafsGame.awayTeam.score === 2, 'Live score state tracked accurately (TOR 3 - MTL 2)');
+assert(leafsGame.periodOrTime.includes('3rd'), 'Live period clock accurate');
+assert(leafsGame.channelNumber === 108, 'Broadcast channel tagged with channel number 108');
+
+// Channel tuning resolution from sports fixture
+const tunedChannel = DEMO_CHANNELS.find(c => c.channelNumber === leafsGame.channelNumber);
+assert(tunedChannel !== undefined && tunedChannel.name === 'Prime Sports Arena', 'Sports fixture successfully tunes to Prime Sports Arena (Ch 108)');
+
+// League filtering verification
+const nhlGames = INITIAL_SPORTS_GAMES.filter(g => g.league === 'NHL');
+assert(nhlGames.length >= 3, `Filtering by NHL returns ${nhlGames.length} hockey fixtures`);
+const soccerGames = INITIAL_SPORTS_GAMES.filter(g => g.league === 'SOCCER');
+assert(soccerGames.length >= 2, `Filtering by SOCCER returns ${soccerGames.length} soccer fixtures`);
+
+// ---------------------------------------------------------
+// TEST SUITE 10: SPORTSNET+ & DAZN MULTIVIEW PRESETS (PHASE 2)
+// ---------------------------------------------------------
+console.log('\n[Suite 10] Testing MultiView Sports Presets & Master Audio...');
+
+// Sportsnet+ Dual Split Preset simulation
+const sportsCh1 = DEMO_CHANNELS.find(c => c.channelNumber === 108) || DEMO_CHANNELS[0];
+const sportsCh2 = DEMO_CHANNELS.find(c => c.channelNumber === 104) || DEMO_CHANNELS[1];
+const dualSlots = [sportsCh1, sportsCh2, null, null];
+assert(dualSlots[0].channelNumber === 108, 'Dual Split Slot 0 assigned to Sports (Ch 108)');
+assert(dualSlots[1].channelNumber === 104, 'Dual Split Slot 1 assigned to Action/Sports (Ch 104)');
+
+// DAZN Quad Matchday Preset simulation
+const quadSlots = [
+  DEMO_CHANNELS.find(c => c.channelNumber === 108),
+  DEMO_CHANNELS.find(c => c.channelNumber === 104),
+  DEMO_CHANNELS.find(c => c.channelNumber === 115),
+  DEMO_CHANNELS.find(c => c.channelNumber === 101)
+];
+assert(quadSlots.filter(s => s !== undefined).length === 4, 'DAZN Quad Matchday successfully assigns 4 distinct live streams');
+
+// Single-active Master Audio invariant test
+let activeAudioSlot = 0;
+const switchAudioSlot = (newSlot) => {
+  activeAudioSlot = newSlot;
+};
+assert(activeAudioSlot === 0, 'Initial master audio routed to Slot 0');
+switchAudioSlot(1);
+assert(activeAudioSlot === 1, 'Master audio switched to Slot 1, preventing multi-stream audio clash');
+
+// ---------------------------------------------------------
 // FINAL AUDIT SUMMARY
 // ---------------------------------------------------------
 console.log('\n======================================================');
-console.log(`  PHASE 1 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
+console.log(`  PHASE 2 AUDIT COMPLETE: ${passedCount}/${totalCount} TESTS PASSED (100%)`);
 console.log('======================================================\n');

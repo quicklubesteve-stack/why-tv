@@ -19,6 +19,7 @@ import {
   X,
   Check,
   Clock,
+  Trophy,
 } from 'lucide-react';
 import { Channel, EpgProgram, PlaybackState, TimeZoneSetting, StreamDiagnostics } from '../types';
 import { formatTimeInZone, getProgramProgress } from '../utils/dateUtils';
@@ -37,6 +38,7 @@ interface PlayerProps {
   timeZone: TimeZoneSetting;
   allChannels?: Channel[];
   onSelectChannel?: (channel: Channel) => void;
+  onOpenSportsBar?: () => void;
   onClose?: () => void;
   onNextChannel?: () => void;
   onPrevChannel?: () => void;
@@ -49,6 +51,7 @@ export const Player: React.FC<PlayerProps> = ({
   timeZone,
   allChannels = [],
   onSelectChannel,
+  onOpenSportsBar,
   onClose,
   onNextChannel,
   onPrevChannel,
@@ -626,6 +629,19 @@ export const Player: React.FC<PlayerProps> = ({
           </div>
 
           <div className="flex items-center space-x-2 pointer-events-auto">
+            {/* Live Sports Companion Bar Trigger */}
+            {onOpenSportsBar && (
+              <button
+                onClick={onOpenSportsBar}
+                className="bg-neutral-950/80 hover:bg-neutral-800 text-amber-300 hover:text-white px-2.5 py-2 rounded-lg border border-neutral-700 shadow text-xs flex items-center space-x-1.5 cable-focus-ring"
+                title="Live Sports Companion Bar (Rogers Xfinity / Sportsnet+)"
+              >
+                <Trophy className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline">Scores</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+              </button>
+            )}
+
             {/* Quick Surfing Drawer Button */}
             <button
               onClick={() => setShowMiniGuide((prev) => !prev)}
