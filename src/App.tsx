@@ -40,6 +40,7 @@ import { PvrRecordingsModal } from './components/PvrRecordingsModal';
 import { ParentalLockModal } from './components/ParentalLockModal';
 import { QuickSearchModal } from './components/QuickSearchModal';
 import { ProviderHubModal } from './components/ProviderHubModal';
+import { SportsHubView } from './components/SportsHubView';
 import { fetchXtreamLiveChannels } from './utils/xtreamClient';
 import {
   createRecordingFromProgram,
@@ -80,7 +81,7 @@ export const App: React.FC = () => {
     () => StorageService.getPreferences().uiTheme || 'tivimate'
   );
   const [activeTab, setActiveTab] = useState<
-    'home' | 'live' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings'
+    'home' | 'live' | 'sports' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings'
   >(() => (StorageService.getPreferences().activeTab as any) || 'live');
   const [corsProxyEnabled, setCorsProxyEnabled] = useState<boolean>(
     () => StorageService.getPreferences().corsProxyEnabled || false
@@ -930,6 +931,35 @@ export const App: React.FC = () => {
               </>
             )}
           </>
+        )}
+
+        {/* SPORTS TAB: Dedicated Live Sports & Football Center */}
+        {activeTab === 'sports' && (
+          <section className="space-y-6">
+            <Player
+              channel={currentChannel}
+              vodItem={activeVodItem}
+              vodEpisode={activeVodEpisode}
+              onPlayNextEpisode={handlePlayNextEpisode}
+              currentProgram={currentPlayingProgram}
+              nextProgram={nextPlayingProgram}
+              timeZone={timeZone}
+              allChannels={channels}
+              onSelectChannel={handleSelectChannel}
+              onOpenSportsBar={() => setIsSportsBarOpen(true)}
+              onNextChannel={handleNextChannel}
+              onPrevChannel={handlePrevChannel}
+              onRecallLastChannel={handleRecallLastChannel}
+              lastChannel={lastChannel}
+              onRecordLive={handleInstantRecord}
+              isRecording={recordings.some((r) => r.channelId === currentChannel?.id && r.status === 'recording')}
+            />
+            <SportsHubView
+              channels={channels}
+              onSelectChannel={handleSelectChannel}
+              currentChannelNumber={currentChannel?.channelNumber}
+            />
+          </section>
         )}
 
         {/* TV GUIDE TAB (Classic 30-min Timeline EPG) */}

@@ -161,7 +161,7 @@ export interface UserPreferences {
   uiTheme: UiThemeMode;
   volume: number;
   isMuted: boolean;
-  activeTab: 'home' | 'live' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings';
+  activeTab: 'home' | 'live' | 'sports' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings';
   selectedCategory: string;
   hasWarnedSharedDevice?: boolean;
   corsProxyEnabled?: boolean;

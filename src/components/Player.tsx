@@ -738,6 +738,44 @@ export const Player: React.FC<PlayerProps> = ({
         </div>
       )}
 
+      {/* Permanent Live Sports Broadcast Score Bug (Always visible during live games, just like television) */}
+      {activeLiveGame && !vodItem && (
+        <div className="absolute top-4 left-4 z-20 pointer-events-auto flex items-stretch bg-neutral-950/90 backdrop-blur-md border border-neutral-700/90 rounded-xl overflow-hidden shadow-2xl transition-all">
+          <div className="bg-red-600 px-3 py-2 flex flex-col items-center justify-center text-white shrink-0">
+            <span className="text-[10px] font-black uppercase tracking-wider">{activeLiveGame.league}</span>
+            <span className="flex items-center space-x-1 text-[9px] font-bold text-red-100">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
+              <span>LIVE</span>
+            </span>
+          </div>
+          <div className="px-3 py-1.5 flex items-center space-x-2 border-r border-neutral-700/80 bg-neutral-900/90">
+            <span className="text-xs font-black text-slate-100 tracking-wider">
+              {activeLiveGame.awayTeam.abbreviation || activeLiveGame.awayTeam.name.slice(0, 3).toUpperCase()}
+            </span>
+            <span className="text-sm font-extrabold text-amber-400 font-mono">
+              {activeLiveGame.awayTeam.score}
+            </span>
+          </div>
+          <div className="px-3 py-1.5 flex items-center space-x-2 border-r border-neutral-700/80 bg-neutral-900/90">
+            <span className="text-xs font-black text-slate-100 tracking-wider">
+              {activeLiveGame.homeTeam.abbreviation || activeLiveGame.homeTeam.name.slice(0, 3).toUpperCase()}
+            </span>
+            <span className="text-sm font-extrabold text-amber-400 font-mono">
+              {activeLiveGame.homeTeam.score}
+            </span>
+          </div>
+          <div className="px-3 py-1.5 flex flex-col justify-center bg-black/95 text-right">
+            <div className="text-[11px] font-mono font-bold text-amber-400 flex items-center justify-end space-x-1">
+              <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+              <span>{activeLiveGame.periodOrTime}</span>
+            </div>
+            <div className="text-[9px] text-slate-300 font-mono truncate max-w-[160px] sm:max-w-[220px]">
+              {activeLiveGame.statsSnippet}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Cable Box On-Screen Display (OSD) Overlay */}
       <div
         className={`absolute inset-0 pointer-events-none transition-opacity duration-300 flex flex-col justify-between p-4 sm:p-6 ${
@@ -811,44 +849,6 @@ export const Player: React.FC<PlayerProps> = ({
               </div>
             </div>
           ) : null}
-
-          {/* Live Sports Broadcast Score Bug (Top Bar Overlay) */}
-          {activeLiveGame && !vodItem && (
-            <div className="hidden sm:flex items-stretch bg-black/90 backdrop-blur-md border border-neutral-700/80 rounded-xl overflow-hidden shadow-2xl pointer-events-auto">
-              <div className="bg-red-600 px-3 py-2 flex flex-col items-center justify-center text-white shrink-0">
-                <span className="text-[10px] font-black uppercase tracking-wider">{activeLiveGame.league}</span>
-                <span className="flex items-center space-x-1 text-[9px] font-bold text-red-100">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
-                  <span>LIVE</span>
-                </span>
-              </div>
-              <div className="px-3 py-2 flex items-center space-x-2 border-r border-neutral-700/80 bg-neutral-950/80">
-                <span className="text-xs font-black text-slate-100 tracking-wider">
-                  {activeLiveGame.awayTeam.abbreviation || activeLiveGame.awayTeam.name.slice(0, 3).toUpperCase()}
-                </span>
-                <span className="text-sm font-extrabold text-amber-400 font-mono">
-                  {activeLiveGame.awayTeam.score}
-                </span>
-              </div>
-              <div className="px-3 py-2 flex items-center space-x-2 border-r border-neutral-700/80 bg-neutral-950/80">
-                <span className="text-xs font-black text-slate-100 tracking-wider">
-                  {activeLiveGame.homeTeam.abbreviation || activeLiveGame.homeTeam.name.slice(0, 3).toUpperCase()}
-                </span>
-                <span className="text-sm font-extrabold text-amber-400 font-mono">
-                  {activeLiveGame.homeTeam.score}
-                </span>
-              </div>
-              <div className="px-3 py-1.5 flex flex-col justify-center bg-neutral-900/95 text-right">
-                <div className="text-[11px] font-mono font-bold text-amber-400 flex items-center justify-end space-x-1">
-                  <Clock className="w-3 h-3 text-amber-400 shrink-0" />
-                  <span>{activeLiveGame.periodOrTime}</span>
-                </div>
-                <div className="text-[9px] text-slate-300 font-mono truncate max-w-[170px]">
-                  {activeLiveGame.statsSnippet}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="flex items-center space-x-2 pointer-events-auto">
             {/* Audio Sound Mode Preset Selector */}

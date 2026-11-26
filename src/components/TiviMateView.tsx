@@ -14,10 +14,13 @@ import {
   Flame,
   Film,
   Zap,
+  Trophy,
 } from 'lucide-react';
 import { Channel, CategoryConfig, EpgProgram, TimeZoneSetting } from '../types';
 import { formatTimeInZone, getProgramProgress } from '../utils/dateUtils';
 import { Player } from './Player';
+import { DEDICATED_CHANNEL_SCHEDULES } from '../data/demoData';
+import { INITIAL_SPORTS_GAMES } from '../data/sportsData';
 
 interface TiviMateViewProps {
   channels: Channel[];
@@ -121,11 +124,36 @@ export const TiviMateView: React.FC<TiviMateViewProps> = ({
     const now = Date.now();
     const mappedId = ch.tvgId || ch.id;
 
-    const list = epgPrograms.filter((p) => p.channelId === mappedId);
+    const list = epgPrograms.filter((p) => p.channelId === mappedId || p.channelId === ch.id);
     list.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
-    const current = list.find((p) => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
-    const upcoming = list.filter((p) => new Date(p.start).getTime() > now).slice(0, 5);
+    let current = list.find((p) => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+    let upcoming = list.filter((p) => new Date(p.start).getTime() > now).slice(0, 5);
+
+    // Fallback to dedicated schedule for sports and football channels
+    if (!current && DEDICATED_CHANNEL_SCHEDULES[ch.channelNumber]) {
+      const sched = DEDICATED_CHANNEL_SCHEDULES[ch.channelNumber];
+      current = {
+        id: `sched_live_${ch.id}`,
+        channelId: mappedId,
+        title: sched.liveTitle,
+        description: sched.liveDesc,
+        category: sched.category,
+        start: new Date(now - 45 * 60 * 1000).toISOString(),
+        end: new Date(now + 75 * 60 * 1000).toISOString(),
+      };
+      if (upcoming.length === 0 && sched.upcoming.length > 0) {
+        upcoming = sched.upcoming.slice(0, 5).map((u, i) => ({
+          id: `sched_fut_${ch.id}_${i}`,
+          channelId: mappedId,
+          title: u.title,
+          description: u.desc,
+          category: u.category,
+          start: new Date(now + (75 + i * 60) * 60 * 1000).toISOString(),
+          end: new Date(now + (135 + i * 60) * 60 * 1000).toISOString(),
+        }));
+      }
+    }
 
     return { current, upcoming };
   };
@@ -209,6 +237,48 @@ export const TiviMateView: React.FC<TiviMateViewProps> = ({
               className="w-full bg-cable-950 border border-cable-border pl-9 pr-3 py-2 rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:border-amber-400"
             />
           </div>
+
+          {/* Live Sports Matchday Mini-Bar in Sports Group */}
+          {activeCategory === 'Sports' && (
+            <div className="p-3 bg-red-950/40 border border-red-500/40 rounded-xl space-y-2">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="font-bold text-red-400 flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-red-500 mr-1.5 animate-ping" />
+                  LIVE MATCHDAY FIXTURES
+                </span>
+                <span className="text-[10px] text-slate-400">Click to tune</span>
+              </div>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                {INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live').slice(0, 4).map((game) => {
+                  const ch = channels.find((c) => c.channelNumber === game.channelNumber);
+                  return (
+                    <div
+                      key={game.id}
+                      onClick={() => ch && onSelectChannel(ch)}
+                      className="p-2 bg-neutral-900/90 hover:bg-neutral-800 rounded-lg border border-neutral-700/60 cursor-pointer flex items-center justify-between text-xs transition"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-[10px] font-bold text-amber-400 font-mono">
+                            {game.league}
+                          </span>
+                          <span className="text-white font-bold truncate">
+                            {game.awayTeam.name} vs {game.homeTeam.name}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-mono block">
+                          CH {game.channelNumber} • {game.periodOrTime}
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-amber-400 shrink-0">
+                        {game.awayTeam.score} - {game.homeTeam.score}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[540px]">
             {filteredChannels.length === 0 ? (

@@ -773,6 +773,26 @@ assert(footballSearchResults.some(r => r.channel.channelNumber === 126), 'Search
 assert(footballSearchResults.some(r => r.type === 'live_game' && r.category === 'NFL'), 'Searching "football" returns live NFL sports games with score bug');
 
 // ---------------------------------------------------------
+// TEST SUITE 21: DEDICATED SPORTS HUB & MULTI-VIEW INTEGRATION
+// ---------------------------------------------------------
+console.log('\n[Suite 21] Testing Dedicated Sports Hub & Matchday Center...');
+const activeFootballGames = INITIAL_SPORTS_GAMES.filter(g => (g.league === 'NFL' || g.league === 'SOCCER') && g.status === 'live');
+assert(activeFootballGames.length >= 4, `At least 4 live football/soccer games active in Matchday Center (found ${activeFootballGames.length})`);
+
+const chiefsGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Chiefs'));
+assert(chiefsGame !== undefined, 'Chiefs vs Bills NFL live marquee game exists');
+assert(chiefsGame.homeTeam.score > 0 && chiefsGame.awayTeam.score > 0, 'Scores actively tracked for live Chiefs game');
+assert(chiefsGame.channelNumber === 108, 'Chiefs marquee game mapped to Ch 108');
+
+const lionsGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Lions'));
+assert(lionsGame !== undefined, 'Lions vs Packers NFL game exists');
+assert(lionsGame.channelNumber === 126, 'Lions game mapped to Ch 126 (NFL RedZone)');
+
+const arsenalGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Arsenal'));
+assert(arsenalGame !== undefined, 'Arsenal vs Man City Premier League game exists');
+assert(arsenalGame.channelNumber === 124, 'Arsenal game mapped to Ch 124 (DAZN Premier Football)');
+
+// ---------------------------------------------------------
 // FINAL AUDIT SUMMARY
 // ---------------------------------------------------------
 console.log('\n======================================================');

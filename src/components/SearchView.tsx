@@ -141,21 +141,41 @@ export const SearchView: React.FC<SearchViewProps> = ({
           ))}
         </div>
 
-        {/* Live Sports Games & Live Matches (Top Spotlight Section) */}
-        {searchTerm && liveMatches.length > 0 && (
+        {/* Live Sports Games & Live Matches (Top Spotlight Section - Always visible) */}
+        {((searchTerm && liveMatches.length > 0) || !searchTerm) && (
           <div className="space-y-3 bg-gradient-to-br from-amber-950/20 via-cable-900 to-cable-950 border border-amber-500/40 p-4 sm:p-5 rounded-2xl shadow-xl">
             <div className="flex items-center justify-between border-b border-cable-border pb-2.5">
               <div className="flex items-center space-x-2">
                 <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
                 <h3 className="text-sm font-black text-amber-300 uppercase tracking-wider font-mono">
-                  Live Games Broadcasts ({liveMatches.length})
+                  {searchTerm
+                    ? `Live Games Matching "${searchTerm}" (${liveMatches.length})`
+                    : `Featured Live Games Right Now (${INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live').length})`}
                 </h3>
               </div>
               <span className="text-[11px] font-mono text-slate-400">Click to watch live game</span>
             </div>
 
             <div className="space-y-3">
-              {liveMatches.map((match) => (
+              {(searchTerm
+                ? liveMatches
+                : INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live').slice(0, 8).map((game) => ({
+                    id: `sport_${game.id}`,
+                    type: 'live_game' as const,
+                    title: `${game.homeTeam.name} vs ${game.awayTeam.name}`,
+                    subtitle: `${game.broadcaster} (CH ${game.channelNumber}) • ${game.periodOrTime}`,
+                    description: game.statsSnippet,
+                    isLive: true,
+                    liveClockOrStatus: game.periodOrTime,
+                    scoreSummary: `${game.homeTeam.abbreviation} ${game.homeTeam.score} - ${game.awayTeam.score} ${game.awayTeam.abbreviation}`,
+                    badge: 'LIVE GAME',
+                    category: game.league,
+                    channel:
+                      channels.find((c) => c.channelNumber === game.channelNumber) ||
+                      channels.find((c) => c.group === 'Sports') ||
+                      channels[0],
+                  }))
+              ).map((match) => (
                 <div
                   key={match.id}
                   onClick={() => onSelectChannel(match.channel)}

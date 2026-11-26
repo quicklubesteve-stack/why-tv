@@ -8,6 +8,7 @@ import {
   Radio,
   ChevronRight,
   TrendingUp,
+  Trophy,
 } from 'lucide-react';
 import {
   Channel,
@@ -17,6 +18,7 @@ import {
   TimeZoneSetting,
 } from '../types';
 import { formatTimeInZone, formatRelativeTime, getProgramProgress } from '../utils/dateUtils';
+import { INITIAL_SPORTS_GAMES } from '../data/sportsData';
 
 interface HomeViewProps {
   continueWatching: ContinueWatchingItem[];
@@ -111,6 +113,91 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* Live Sports & Football Matchday Section */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Trophy className="w-5 h-5 text-amber-400" />
+            <h2 className="text-xl font-bold text-white tracking-wide">Live Sports & Football Matchday</h2>
+            <span className="text-[10px] font-mono font-bold bg-red-600 text-white px-2 py-0.5 rounded-full flex items-center">
+              <span className="w-1.5 h-1.5 rounded-full bg-white mr-1 animate-ping" />
+              LIVE NOW
+            </span>
+          </div>
+          <button
+            onClick={() => onNavigateTab('sports' as any)}
+            className="text-xs text-amber-400 hover:underline flex items-center font-medium"
+          >
+            <span>All Sports Fixtures</span>
+            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live').slice(0, 6).map((game) => {
+            const ch =
+              channels.find((c) => c.channelNumber === game.channelNumber) ||
+              channels.find((c) => c.group === 'Sports');
+            return (
+              <div
+                key={game.id}
+                onClick={() => ch && onSelectChannel(ch)}
+                role="button"
+                tabIndex={0}
+                className="group relative bg-cable-900 hover:bg-cable-800 border border-cable-border/70 hover:border-amber-400 p-4 rounded-xl cursor-pointer shadow-md transition-all duration-150 cable-focus-ring flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-xs font-mono mb-2">
+                    <span className="font-bold text-amber-400 bg-black/60 px-2 py-0.5 rounded">
+                      {game.league}
+                    </span>
+                    <span className="flex items-center text-red-400 font-bold">
+                      <Clock className="w-3 h-3 mr-1 text-amber-400" />
+                      {game.periodOrTime}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 my-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-white group-hover:text-amber-300 truncate">
+                        {game.awayTeam.name}
+                      </span>
+                      <span className="text-lg font-mono font-bold text-amber-400">
+                        {game.awayTeam.score}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-1 border-t border-neutral-800">
+                      <span className="text-sm font-bold text-white group-hover:text-amber-300 truncate">
+                        {game.homeTeam.name}
+                      </span>
+                      <span className="text-lg font-mono font-bold text-amber-400">
+                        {game.homeTeam.score}
+                      </span>
+                    </div>
+                  </div>
+
+                  {game.statsSnippet && (
+                    <p className="text-[11px] text-slate-300 font-mono truncate mt-1">
+                      {game.statsSnippet}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-3 pt-2.5 border-t border-cable-border/60 flex items-center justify-between">
+                  <span className="text-xs font-mono text-slate-400">
+                    CH {game.channelNumber} • {game.broadcaster}
+                  </span>
+                  <span className="text-xs font-bold text-neutral-950 bg-amber-400 group-hover:bg-amber-300 px-2.5 py-1 rounded-lg flex items-center space-x-1">
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Watch</span>
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* 1. Continue Watching Section */}
       {continueWatching.length > 0 && (

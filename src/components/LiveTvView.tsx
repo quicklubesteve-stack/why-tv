@@ -9,9 +9,12 @@ import {
   Radio,
   EyeOff,
   Filter,
+  Trophy,
+  Clock,
 } from 'lucide-react';
 import { Channel, CategoryConfig, EpgProgram, TimeZoneSetting } from '../types';
 import { formatTimeInZone } from '../utils/dateUtils';
+import { INITIAL_SPORTS_GAMES } from '../data/sportsData';
 
 interface LiveTvViewProps {
   channels: Channel[];
@@ -204,6 +207,59 @@ export const LiveTvView: React.FC<LiveTvViewProps> = ({
               );
             })}
         </div>
+
+        {/* Live Sports Matchday Fixtures when Sports tab is active */}
+        {selectedCategory.toLowerCase() === 'sports' && (
+          <div className="p-4 bg-gradient-to-r from-red-950/40 via-neutral-900 to-amber-950/30 border border-red-500/40 rounded-2xl space-y-3">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="font-bold text-red-400 flex items-center">
+                <span className="w-2 h-2 rounded-full bg-red-500 mr-2 animate-ping" />
+                LIVE IN-PROGRESS SPORTS & FOOTBALL GAMES
+              </span>
+              <span className="text-slate-400">Click any game to tune directly</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live').map((game) => {
+                const ch = channels.find((c) => c.channelNumber === game.channelNumber) || channels.find((c) => c.group === 'Sports');
+                return (
+                  <div
+                    key={game.id}
+                    onClick={() => ch && onSelectChannel(ch)}
+                    className="p-3 bg-neutral-900/90 hover:bg-neutral-800 rounded-xl border border-neutral-700/80 hover:border-amber-400 cursor-pointer transition flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between text-[11px] font-mono mb-1">
+                        <span className="font-bold text-amber-400 bg-black/60 px-2 py-0.5 rounded">
+                          {game.league}
+                        </span>
+                        <span className="flex items-center text-red-400 font-bold">
+                          <Clock className="w-3 h-3 mr-1 text-amber-400" />
+                          {game.periodOrTime}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between font-bold text-xs text-white my-1">
+                        <span className="truncate pr-1">{game.awayTeam.name}</span>
+                        <span className="font-mono text-amber-400">{game.awayTeam.score}</span>
+                      </div>
+                      <div className="flex items-center justify-between font-bold text-xs text-white border-t border-neutral-800 pt-1">
+                        <span className="truncate pr-1">{game.homeTeam.name}</span>
+                        <span className="font-mono text-amber-400">{game.homeTeam.score}</span>
+                      </div>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-neutral-800 flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                      <span>CH {game.channelNumber}</span>
+                      <span className="text-amber-400 font-bold flex items-center space-x-1">
+                        <Play className="w-2.5 h-2.5 fill-current" />
+                        <span>Watch Game</span>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Channels List / Grid */}
