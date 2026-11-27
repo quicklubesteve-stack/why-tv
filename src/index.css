@@ -4,8 +4,8 @@
 
 @layer base {
   body {
-    background-color: #070a0f;
-    color: #e2e8f0;
+    background-color: #10151F;
+    color: #FFFFFF;
     overflow-x: hidden;
   }
 }
@@ -16,22 +16,22 @@
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0c1017;
+  background: #10151F;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #263447;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #42AAFF;
 }
 
 /* 10-Foot UI Focus highlight class */
 .cable-focus-ring:focus-visible,
 .cable-active-focus {
   outline: none;
-  box-shadow: 0 0 0 3px #fbbf24, 0 0 24px rgba(251, 191, 36, 0.55) !important;
-  border-color: #fbbf24 !important;
+  box-shadow: 0 0 0 3px #42AAFF, 0 0 24px rgba(66, 170, 255, 0.6) !important;
+  border-color: #42AAFF !important;
   transform: scale(1.02);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
   z-index: 20;

@@ -7,6 +7,18 @@ export default {
   theme: {
     extend: {
       colors: {
+        guide: {
+          bg: '#10151F',         // Dark navy background
+          menu: '#1B2432',       // Menu background
+          surface: '#263447',    // Programme guide background
+          selected: '#195F9E',   // Selected channel background
+          highlight: '#42AAFF',  // Bright blue highlights
+          textMuted: '#94A3B8',  // Light grey secondary text
+          nowLine: '#EF4444',    // Red vertical line for current time
+          darkBlue: '#0d131d',
+          cellHover: '#2f4158',
+          border: '#33445c',
+        },
         cable: {
           950: '#06080d',
           900: '#0c1017',
@@ -15,8 +27,8 @@ export default {
           700: '#222f44',
           600: '#324461',
           border: '#253348',
-          accent: '#eab308', // Warm cable amber
-          glow: '#38bdf8',
+          accent: '#42AAFF', // Bright blue highlight
+          glow: '#42AAFF',
         }
       },
       fontFamily: {

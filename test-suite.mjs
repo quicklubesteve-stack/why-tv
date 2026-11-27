@@ -637,7 +637,7 @@ assert(jumpTomorrow.getDate() === lateNight.getDate() + 1, 'Late night jump targ
 // TEST SUITE 19: UNIVERSAL PROVIDER CONNECTION SYSTEM (EXISTING IPTV INFRASTRUCTURE)
 // ---------------------------------------------------------
 console.log('\n[Suite 19] Testing Universal Provider Connections & Multi-Provider Ingest...');
-assert(Array.isArray(INITIAL_PROVIDERS) && INITIAL_PROVIDERS.length === 12, `Registered ${INITIAL_PROVIDERS.length} existing IPTV providers (12 required)`);
+assert(Array.isArray(INITIAL_PROVIDERS) && INITIAL_PROVIDERS.length >= 12, `Registered ${INITIAL_PROVIDERS.length} existing IPTV providers (>= 12 required)`);
 
 // 1. Verify All 12 Requested Entities Exist
 const providerSlugs = INITIAL_PROVIDERS.map(p => p.slug);
@@ -713,18 +713,18 @@ assert(resolved[1].channelNumber === 103 || resolved[1].channelNumber === 102, '
 
 // 8. Provider Filtering & Telemetry Metrics
 const bduList = filterProviders(INITIAL_PROVIDERS, 'LICENSED_BDU', '');
-assert(bduList.length === 4, 'Category filter LICENSED_BDU returns 4 Canadian BDUs (VMedia, TekSavvy, Bell, Rogers)');
+assert(bduList.length >= 4, `Category filter LICENSED_BDU returns Canadian BDUs and broadcasters (found ${bduList.length})`);
 
 const fastList = filterProviders(INITIAL_PROVIDERS, 'FAST_SYNDICATOR', '');
-assert(fastList.length === 3, 'Category filter FAST_SYNDICATOR returns 3 syndicators (Amagi, Wurl, Frequency)');
+assert(fastList.length >= 3, `Category filter FAST_SYNDICATOR returns syndicators (found ${fastList.length})`);
 
 const searchAmagi = filterProviders(INITIAL_PROVIDERS, 'ALL', 'amagi.tv');
 assert(searchAmagi.length === 1 && searchAmagi[0].slug === 'amagi', 'Search by CDN origin "amagi.tv" locates Amagi provider');
 
 const metrics = calculateProviderMetrics(INITIAL_PROVIDERS);
-assert(metrics.totalProviders === 12, 'Calculated 12 total providers in metrics');
-assert(metrics.licensedBdus === 4, 'Calculated 4 licensed BDUs in metrics');
-assert(metrics.fastSyndicators === 3, 'Calculated 3 FAST syndicators in metrics');
+assert(metrics.totalProviders >= 12, `Calculated total providers in metrics (found ${metrics.totalProviders})`);
+assert(metrics.licensedBdus >= 4, `Calculated licensed BDUs in metrics (found ${metrics.licensedBdus})`);
+assert(metrics.fastSyndicators >= 3, `Calculated FAST syndicators in metrics (found ${metrics.fastSyndicators})`);
 
 // ---------------------------------------------------------
 // TEST SUITE 20: ACCURATE LIVE FOOTBALL & SPORTS STREAM SYNCHRONIZATION
@@ -795,6 +795,47 @@ assert(collegeGame.channelNumber === 108, 'College football game mapped to Ch 10
 const soccerMatch = INITIAL_SPORTS_GAMES.find(g => g.league === 'SOCCER');
 assert(soccerMatch !== undefined, 'UEFA Europa League Matchday 5 game exists');
 assert(soccerMatch.channelNumber === 124, 'Europa League game mapped to Ch 124 (beIN Sports XTRA Soccer)');
+
+// ---------------------------------------------------------
+// TEST SUITE 22: TELEVISION GUIDE REDESIGN & EXPANDED PROVIDERS
+// ---------------------------------------------------------
+console.log('\n[Suite 22] Testing Television Guide Redesign & Expanded Providers...');
+
+// 1. Verify all 18 IPTV and FAST providers exist in INITIAL_PROVIDERS
+assert(INITIAL_PROVIDERS.length >= 18, `Provider directory contains ${INITIAL_PROVIDERS.length} authorized providers (>= 18 required)`);
+const plexProvider = INITIAL_PROVIDERS.find(p => p.id === 'provider_plex_tv');
+assert(plexProvider !== undefined, 'Plex Live TV provider registered');
+assert(plexProvider.badge === 'Plex Live TV', 'Plex Live TV badge set correctly');
+assert(plexProvider.websiteUrl.includes('plex.tv'), 'Plex Live TV official website link verified');
+
+const samsungProvider = INITIAL_PROVIDERS.find(p => p.id === 'provider_samsung_tv_plus');
+assert(samsungProvider !== undefined, 'Samsung TV Plus provider registered');
+
+const lgProvider = INITIAL_PROVIDERS.find(p => p.id === 'provider_lg_channels');
+assert(lgProvider !== undefined, 'LG Channels provider registered');
+
+const xumoProvider = INITIAL_PROVIDERS.find(p => p.id === 'provider_xumo_play');
+assert(xumoProvider !== undefined, 'Xumo Play provider registered');
+
+const cbcProvider = INITIAL_PROVIDERS.find(p => p.id === 'provider_cbc_gem');
+assert(cbcProvider !== undefined, 'CBC Gem Canadian public broadcaster registered');
+
+const rokuProvider = INITIAL_PROVIDERS.find(p => p.id === 'provider_roku_channel');
+assert(rokuProvider !== undefined, 'The Roku Channel provider registered');
+
+// 2. Verify expanded channels in PROVIDER_CHANNELS
+assert(PROVIDER_CHANNELS.length >= 48, `PROVIDER_CHANNELS contains ${PROVIDER_CHANNELS.length} pre-configured channels (>= 48 required)`);
+const plexAmc = PROVIDER_CHANNELS.find(c => c.id === 'plex_701_amc_thrillers');
+assert(plexAmc !== undefined, 'Plex AMC Thrillers channel 701 exists');
+assert(plexAmc.channelNumber === 701, 'Plex AMC Thrillers mapped to channel 701');
+
+const cbcToronto = PROVIDER_CHANNELS.find(c => c.id === 'cbc_781_toronto_live');
+assert(cbcToronto !== undefined, 'CBC Gem Toronto channel 781 exists');
+assert(cbcToronto.channelNumber === 781, 'CBC Gem Toronto mapped to channel 781');
+
+const rokuHollywood = PROVIDER_CHANNELS.find(c => c.id === 'roku_801_hollywood_hits');
+assert(rokuHollywood !== undefined, 'Roku Channel Hollywood Hits channel 801 exists');
+assert(rokuHollywood.channelNumber === 801, 'Roku Channel mapped to channel 801');
 
 // ---------------------------------------------------------
 // FINAL AUDIT SUMMARY

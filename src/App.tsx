@@ -28,6 +28,7 @@ import { TiviMateView } from './components/TiviMateView';
 import { SmartersHubView } from './components/SmartersHubView';
 import { VodHubView } from './components/VodHubView';
 import { TvGuideView } from './components/TvGuideView';
+import { PremiumTvGuide } from './components/PremiumTvGuide';
 import { MultiViewScreen } from './components/MultiViewScreen';
 import { FavouritesView } from './components/FavouritesView';
 import { SearchView } from './components/SearchView';
@@ -82,7 +83,7 @@ export const App: React.FC = () => {
   );
   const [activeTab, setActiveTab] = useState<
     'home' | 'live' | 'sports' | 'guide' | 'ondemand' | 'multiview' | 'favourites' | 'search' | 'settings'
-  >(() => (StorageService.getPreferences().activeTab as any) || 'live');
+  >(() => (StorageService.getPreferences().activeTab as any) || 'guide');
   const [corsProxyEnabled, setCorsProxyEnabled] = useState<boolean>(
     () => StorageService.getPreferences().corsProxyEnabled || false
   );
@@ -823,65 +824,104 @@ export const App: React.FC = () => {
       />
 
       {/* 2. Main Viewport Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-        {/* HOME TAB: Chooses between Smarters Hub and Cable Box Home based on uiTheme */}
-        {activeTab === 'home' && (
-          <>
-            {uiTheme === 'smarters' ? (
-              <SmartersHubView
-                channels={channels}
-                continueWatching={continueWatching}
-                recents={recents}
-                favouritesCount={favourites.length}
-                xtreamAccount={currentXtreamAccount}
-                timeZone={timeZone}
-                onNavigateTab={setActiveTab}
-                onSelectChannel={handleSelectChannel}
-                onOpenXtreamModal={() => setIsXtreamModalOpen(true)}
-                onOpenPvrModal={() => setIsPvrModalOpen(true)}
-              />
-            ) : (
-              <>
-                <section className="space-y-3">
-                  <Player
-                    channel={currentChannel}
-                    vodItem={activeVodItem}
-                    vodEpisode={activeVodEpisode}
-                    onPlayNextEpisode={handlePlayNextEpisode}
-                    currentProgram={currentPlayingProgram}
-                    nextProgram={nextPlayingProgram}
-                    timeZone={timeZone}
-                    allChannels={channels}
-                    onSelectChannel={handleSelectChannel}
-                    onOpenSportsBar={() => setIsSportsBarOpen(true)}
-                    onNextChannel={handleNextChannel}
-                    onPrevChannel={handlePrevChannel}
-                    onRecallLastChannel={handleRecallLastChannel}
-                    lastChannel={lastChannel}
-                    onRecordLive={handleInstantRecord}
-                    isRecording={recordings.some((r) => r.channelId === currentChannel?.id && r.status === 'recording')}
-                  />
-                </section>
-                <HomeView
-                  continueWatching={continueWatching}
-                  favourites={favouriteChannels}
-                  recents={recents}
+      {activeTab === 'guide' || (activeTab === 'live' && uiTheme === 'tivimate') ? (
+        <div className="flex-1 w-full overflow-hidden">
+          <PremiumTvGuide
+            channels={channels}
+            selectedChannel={currentChannel}
+            onSelectChannel={handleSelectChannel}
+            categories={categories}
+            favourites={favourites}
+            onToggleFavourite={handleToggleFavourite}
+            epgPrograms={epgPrograms}
+            timeZone={timeZone}
+            onOpenSettings={() => setActiveTab('settings')}
+            onOpenSportsBar={() => setIsSportsBarOpen(true)}
+            onOpenProviderHub={() => setIsProviderModalOpen(true)}
+            onOpenSearch={() => setIsQuickSearchOpen(true)}
+            onScheduleRecording={handleScheduleRecording}
+            recordedProgramKeys={new Set(recordings.map((r) => `${r.channelId}_${r.startTime}`))}
+          />
+        </div>
+      ) : (
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+          {/* HOME TAB: Chooses between Smarters Hub and Cable Box Home based on uiTheme */}
+          {activeTab === 'home' && (
+            <>
+              {uiTheme === 'smarters' ? (
+                <SmartersHubView
                   channels={channels}
-                  epgPrograms={epgPrograms}
+                  continueWatching={continueWatching}
+                  recents={recents}
+                  favouritesCount={favourites.length}
+                  xtreamAccount={currentXtreamAccount}
                   timeZone={timeZone}
-                  onSelectChannel={handleSelectChannel}
                   onNavigateTab={setActiveTab}
+                  onSelectChannel={handleSelectChannel}
+                  onOpenXtreamModal={() => setIsXtreamModalOpen(true)}
+                  onOpenPvrModal={() => setIsPvrModalOpen(true)}
                 />
-              </>
-            )}
-          </>
-        )}
+              ) : (
+                <>
+                  <section className="space-y-3">
+                    <Player
+                      channel={currentChannel}
+                      vodItem={activeVodItem}
+                      vodEpisode={activeVodEpisode}
+                      onPlayNextEpisode={handlePlayNextEpisode}
+                      currentProgram={currentPlayingProgram}
+                      nextProgram={nextPlayingProgram}
+                      timeZone={timeZone}
+                      allChannels={channels}
+                      onSelectChannel={handleSelectChannel}
+                      onOpenSportsBar={() => setIsSportsBarOpen(true)}
+                      onNextChannel={handleNextChannel}
+                      onPrevChannel={handlePrevChannel}
+                      onRecallLastChannel={handleRecallLastChannel}
+                      lastChannel={lastChannel}
+                      onRecordLive={handleInstantRecord}
+                      isRecording={recordings.some((r) => r.channelId === currentChannel?.id && r.status === 'recording')}
+                    />
+                  </section>
+                  <HomeView
+                    continueWatching={continueWatching}
+                    favourites={favouriteChannels}
+                    recents={recents}
+                    channels={channels}
+                    epgPrograms={epgPrograms}
+                    timeZone={timeZone}
+                    onSelectChannel={handleSelectChannel}
+                    onNavigateTab={setActiveTab}
+                  />
+                </>
+              )}
+            </>
+          )}
 
-        {/* LIVE TV TAB: Chooses between TiviMate Tri-Pane and Classic Cable Box list */}
-        {activeTab === 'live' && (
-          <>
-            {uiTheme === 'tivimate' ? (
-              <TiviMateView
+          {/* LIVE TV TAB (Classic Mode fallback) */}
+          {activeTab === 'live' && (
+            <>
+              <section className="space-y-3">
+                <Player
+                  channel={currentChannel}
+                  vodItem={activeVodItem}
+                  vodEpisode={activeVodEpisode}
+                  onPlayNextEpisode={handlePlayNextEpisode}
+                  currentProgram={currentPlayingProgram}
+                  nextProgram={nextPlayingProgram}
+                  timeZone={timeZone}
+                  allChannels={channels}
+                  onSelectChannel={handleSelectChannel}
+                  onOpenSportsBar={() => setIsSportsBarOpen(true)}
+                  onNextChannel={handleNextChannel}
+                  onPrevChannel={handlePrevChannel}
+                  onRecallLastChannel={handleRecallLastChannel}
+                  lastChannel={lastChannel}
+                  onRecordLive={handleInstantRecord}
+                  isRecording={recordings.some((r) => r.channelId === currentChannel?.id && r.status === 'recording')}
+                />
+              </section>
+              <LiveTvView
                 channels={channels}
                 selectedChannel={currentChannel}
                 onSelectChannel={handleSelectChannel}
@@ -891,47 +931,9 @@ export const App: React.FC = () => {
                 onOpenCategoryManager={() => setIsCategoryModalOpen(true)}
                 epgPrograms={epgPrograms}
                 timeZone={timeZone}
-                onNextChannel={handleNextChannel}
-                onPrevChannel={handlePrevChannel}
-                onOpenSportsBar={() => setIsSportsBarOpen(true)}
               />
-            ) : (
-              <>
-                <section className="space-y-3">
-                  <Player
-                    channel={currentChannel}
-                    vodItem={activeVodItem}
-                    vodEpisode={activeVodEpisode}
-                    onPlayNextEpisode={handlePlayNextEpisode}
-                    currentProgram={currentPlayingProgram}
-                    nextProgram={nextPlayingProgram}
-                    timeZone={timeZone}
-                    allChannels={channels}
-                    onSelectChannel={handleSelectChannel}
-                    onOpenSportsBar={() => setIsSportsBarOpen(true)}
-                    onNextChannel={handleNextChannel}
-                    onPrevChannel={handlePrevChannel}
-                    onRecallLastChannel={handleRecallLastChannel}
-                    lastChannel={lastChannel}
-                    onRecordLive={handleInstantRecord}
-                    isRecording={recordings.some((r) => r.channelId === currentChannel?.id && r.status === 'recording')}
-                  />
-                </section>
-                <LiveTvView
-                  channels={channels}
-                  selectedChannel={currentChannel}
-                  onSelectChannel={handleSelectChannel}
-                  categories={categories}
-                  favourites={favourites}
-                  onToggleFavourite={handleToggleFavourite}
-                  onOpenCategoryManager={() => setIsCategoryModalOpen(true)}
-                  epgPrograms={epgPrograms}
-                  timeZone={timeZone}
-                />
-              </>
-            )}
-          </>
-        )}
+            </>
+          )}
 
         {/* SPORTS TAB: Dedicated Live Sports & Football Center */}
         {activeTab === 'sports' && (
@@ -962,19 +964,7 @@ export const App: React.FC = () => {
           </section>
         )}
 
-        {/* TV GUIDE TAB (Classic 30-min Timeline EPG) */}
-        {activeTab === 'guide' && (
-          <TvGuideView
-            channels={channels}
-            epgPrograms={epgPrograms}
-            timeZone={timeZone}
-            onSelectChannel={handleSelectChannel}
-            onOpenMappingModal={() => setIsMappingModalOpen(true)}
-            unmatchedCount={unmatchedChannels.length}
-            onScheduleRecording={handleScheduleRecording}
-            recordedProgramKeys={new Set(recordings.map((r) => `${r.channelId}_${r.startTime}`))}
-          />
-        )}
+
 
         {/* ON-DEMAND ENTERTAINMENT HUB TAB (Netflix & IPTV Smarters Pro VOD) */}
         {activeTab === 'ondemand' && (
@@ -1089,6 +1079,7 @@ export const App: React.FC = () => {
           />
         )}
       </main>
+      )}
 
       {/* Modals */}
       {isCategoryModalOpen && (
