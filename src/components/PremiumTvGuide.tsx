@@ -328,11 +328,11 @@ export const PremiumTvGuide: React.FC<PremiumTvGuideProps> = ({
         case 'international':
           return (
             groupLower === 'international' ||
-            nameLower.includes('tv5') ||
-            nameLower.includes('monde') ||
             nameLower.includes('al jazeera') ||
             nameLower.includes('dw') ||
-            nameLower.includes('france 24')
+            nameLower.includes('france 24') ||
+            nameLower.includes('euronews') ||
+            nameLower.includes('bbc news')
           );
         case 'pluto':
           return (

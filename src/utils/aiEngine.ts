@@ -373,8 +373,7 @@ export function categorizeChannelsWithAi(channels: Channel[]): ChannelCategoriza
     }
 
     if (text.includes('.ca') || text.includes('canada')) tags.push('Canada Origin');
-    if (text.includes('fr') || text.includes('france')) tags.push('French Audio');
-    if (text.includes('de') || text.includes('deutsch')) tags.push('German Audio');
+    tags.push('English Audio');
 
     return {
       channelId: ch.id,

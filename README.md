@@ -60,7 +60,7 @@ WHY IPTV avoids fictional channel lists and operates on a **Zero Self-Hosting Ar
 
 | Provider | Category | Origin Server | Verified Channels | Key Channels Included |
 | :--- | :--- | :--- | :---: | :--- |
-| **CBC Gem** | Canadian Public BDU | `gem.cbc.ca` | 4 | CBC Toronto HD, CBC News Net, CBC Vancouver, ICI Radio-Canada |
+| **CBC Gem** | Canadian Public BDU | `gem.cbc.ca` | 4 | CBC Toronto HD, CBC News Net, CBC Vancouver, CBC Ottawa English HD |
 | **Pluto TV** | Consumer FAST | `stitcher.pluto.tv` | 8 | Action Cinema, Crime Drama, SciFi Nexus, Comedy Central |
 | **Plex Live TV** | Consumer FAST | `epg.provider.plex.tv` | 4 | AMC Thrillers HD, Game Show Central, Euronews, Hollywood Action |
 | **Samsung TV Plus** | Consumer FAST | `linear.samsungtvplus.com` | 4 | NBC News NOW, Weather Spy, Fubo Sports, Comedy Dynamics |

@@ -39,7 +39,7 @@ c:\Users\steve\OneDrive\Desktop\tv\
 ├── START-WHY-IPTV.bat             # 1-Click Windows Laptop Classroom Launcher
 ├── STOP-WHY-IPTV.bat              # Safe Process Stopper
 ├── PRE-PRESENTATION-CHECK.bat     # Pre-Flight Diagnostic Test & CDN Ping Suite
-├── test-suite.mjs                 # 556 Automated Unit & Regression Tests (23 Suites)
+├── test-suite.mjs                 # 566 Automated Unit & Regression Tests (24 Suites)
 └── package.json                   # Project Dependencies & Scripts
 ```
 
@@ -53,7 +53,7 @@ c:\Users\steve\OneDrive\Desktop\tv\
   npx tsx test-suite.mjs
   npm run build
   ```
-  All 556 tests must pass (100% success rate) and Vite production build must complete with zero errors.
+  All 566 tests must pass (100% success rate) and Vite production build must complete with zero errors.
 
 ---
 
