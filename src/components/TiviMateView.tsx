@@ -249,7 +249,7 @@ export const TiviMateView: React.FC<TiviMateViewProps> = ({
                 <span className="text-[10px] text-slate-400">Click to tune</span>
               </div>
               <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                {INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live').slice(0, 4).map((game) => {
+                {INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live' || g.status === 'final').slice(0, 5).map((game) => {
                   const ch = channels.find((c) => c.channelNumber === game.channelNumber);
                   return (
                     <div

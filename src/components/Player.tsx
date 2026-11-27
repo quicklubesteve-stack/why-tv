@@ -126,7 +126,7 @@ export const Player: React.FC<PlayerProps> = ({
     if (!channel) return null;
     return (
       INITIAL_SPORTS_GAMES.find(
-        (g) => g.channelNumber === channel.channelNumber && g.status === 'live'
+        (g) => g.channelNumber === channel.channelNumber && (g.status === 'live' || g.status === 'final')
       ) || null
     );
   }, [channel]);
@@ -739,14 +739,20 @@ export const Player: React.FC<PlayerProps> = ({
         </div>
       )}
 
-      {/* Permanent Live Sports Broadcast Score Bug (Always visible during live games, dismissible via X) */}
+      {/* Permanent Live Sports Broadcast Score Bug (Always visible during live & completed Thanksgiving games, dismissible via X) */}
       {showScoreBug && activeLiveGame && !vodItem && (
         <div className="absolute top-4 left-4 z-20 pointer-events-auto flex items-stretch bg-neutral-950/90 backdrop-blur-md border border-neutral-700/90 rounded-xl overflow-hidden shadow-2xl transition-all group">
-          <div className="bg-red-600 px-3 py-2 flex flex-col items-center justify-center text-white shrink-0">
+          <div className={`${activeLiveGame.status === 'live' ? 'bg-red-600' : 'bg-neutral-800'} px-3 py-2 flex flex-col items-center justify-center text-white shrink-0`}>
             <span className="text-[10px] font-black uppercase tracking-wider">{activeLiveGame.league}</span>
             <span className="flex items-center space-x-1 text-[9px] font-bold text-red-100">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
-              <span>LIVE</span>
+              {activeLiveGame.status === 'live' ? (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping inline-block" />
+                  <span>LIVE</span>
+                </>
+              ) : (
+                <span className="text-amber-400 font-bold">FINAL</span>
+              )}
             </span>
           </div>
           <div className="px-3 py-1.5 flex items-center space-x-2 border-r border-neutral-700/80 bg-neutral-900/90">

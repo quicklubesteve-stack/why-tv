@@ -135,7 +135,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live').slice(0, 6).map((game) => {
+          {INITIAL_SPORTS_GAMES.filter((g) => g.status === 'live' || g.status === 'final').slice(0, 6).map((game) => {
             const ch =
               channels.find((c) => c.channelNumber === game.channelNumber) ||
               channels.find((c) => c.group === 'Sports');
@@ -152,7 +152,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     <span className="font-bold text-amber-400 bg-black/60 px-2 py-0.5 rounded">
                       {game.league}
                     </span>
-                    <span className="flex items-center text-red-400 font-bold">
+                    <span className={`flex items-center font-bold ${game.status === 'live' ? 'text-red-400' : 'text-emerald-400'}`}>
                       <Clock className="w-3 h-3 mr-1 text-amber-400" />
                       {game.periodOrTime}
                     </span>

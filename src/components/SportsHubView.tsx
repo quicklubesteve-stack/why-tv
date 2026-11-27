@@ -27,7 +27,7 @@ export const SportsHubView: React.FC<SportsHubViewProps> = ({
   currentChannelNumber,
 }) => {
   const [selectedLeague, setSelectedLeague] = useState<SportLeague | 'ALL'>('ALL');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'live' | 'upcoming'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'live' | 'final' | 'upcoming'>('ALL');
   const [games, setGames] = useState<SportsGame[]>(INITIAL_SPORTS_GAMES);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
@@ -195,6 +195,12 @@ export const SportsHubView: React.FC<SportsHubViewProps> = ({
             className={`px-3 py-1 rounded-lg ${statusFilter === 'live' ? 'bg-red-600/20 text-red-400 font-bold border border-red-500/40' : 'text-slate-400 hover:text-white'}`}
           >
             🔴 LIVE GAMES ({liveGames.length})
+          </button>
+          <button
+            onClick={() => setStatusFilter('final')}
+            className={`px-3 py-1 rounded-lg ${statusFilter === 'final' ? 'bg-emerald-600/20 text-emerald-400 font-bold border border-emerald-500/40' : 'text-slate-400 hover:text-white'}`}
+          >
+            🏁 FINAL SCORES ({games.filter((g) => g.status === 'final').length})
           </button>
           <button
             onClick={() => setStatusFilter('upcoming')}
