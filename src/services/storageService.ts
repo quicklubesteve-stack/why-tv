@@ -16,6 +16,9 @@ import {
   DEMO_SOURCE_ID,
   generateDynamicDemoEpg,
 } from '../data/demoData';
+import { PROVIDER_CHANNELS } from '../data/providerData';
+
+export const INITIAL_ALL_CHANNELS: Channel[] = [...DEMO_CHANNELS, ...PROVIDER_CHANNELS];
 
 const KEYS = {
   SOURCES: 'whytv_sources_v1',
@@ -39,7 +42,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   uiTheme: 'tivimate',
   volume: 0.85,
   isMuted: false,
-  activeTab: 'home',
+  activeTab: 'guide',
   selectedCategory: 'All',
   hasWarnedSharedDevice: false,
   corsProxyEnabled: false,
@@ -93,10 +96,10 @@ export class StorageService {
             return c;
           });
 
-          // Merge any demo channels that aren't present yet so expanded channels (Phase 5) automatically appear
+          // Merge any bootstrap channels that aren't present yet so expanded channels automatically appear
           const existingIds = new Set(upgraded.map((c) => c.id));
-          const missingDemoChannels = DEMO_CHANNELS.filter((c) => !existingIds.has(c.id));
-          const finalChannels = missingDemoChannels.length > 0 ? [...upgraded, ...missingDemoChannels] : upgraded;
+          const missingChannels = INITIAL_ALL_CHANNELS.filter((c) => !existingIds.has(c.id));
+          const finalChannels = missingChannels.length > 0 ? [...upgraded, ...missingChannels] : upgraded;
 
           this.saveChannels(finalChannels);
           return finalChannels;
@@ -105,7 +108,7 @@ export class StorageService {
     } catch (e) {
       console.error('Failed to load channels from localStorage', e);
     }
-    return DEMO_CHANNELS;
+    return INITIAL_ALL_CHANNELS;
   }
 
   static saveChannels(channels: Channel[]): void {

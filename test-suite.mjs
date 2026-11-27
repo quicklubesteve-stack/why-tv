@@ -21,6 +21,8 @@ import {
   SOUND_MODE_PROFILES,
 } from './src/utils/vodUtils.js';
 import { INITIAL_PROVIDERS, PROVIDER_CHANNELS } from './src/data/providerData.js';
+import { queryAiAssistant, detectDuplicateChannels, categorizeChannelsWithAi } from './src/utils/aiEngine.js';
+import { INITIAL_ALL_CHANNELS } from './src/services/storageService.js';
 import {
   importProviderChannels,
   disconnectProviderChannels,
@@ -836,6 +838,60 @@ assert(cbcToronto.channelNumber === 781, 'CBC Gem Toronto mapped to channel 781'
 const rokuHollywood = PROVIDER_CHANNELS.find(c => c.id === 'roku_801_hollywood_hits');
 assert(rokuHollywood !== undefined, 'Roku Channel Hollywood Hits channel 801 exists');
 assert(rokuHollywood.channelNumber === 801, 'Roku Channel mapped to channel 801');
+
+// ---------------------------------------------------------
+// TEST SUITE 23: WORKING AI ASSISTANT & ACADEMIC ENGINE
+// ---------------------------------------------------------
+console.log('\n[Suite 23] Testing Working AI Assistant & Academic Prototype Discovery...');
+
+// 1. Minimum Prototype Target: >= 100 channels in initial fleet
+assert(INITIAL_ALL_CHANNELS.length >= 100, `Initial fleet contains ${INITIAL_ALL_CHANNELS.length} authorized working channels (>= 100 required)`);
+
+// 2. Query 1: "What can I watch right now?"
+const q1 = queryAiAssistant("What can I watch right now?", INITIAL_ALL_CHANNELS, epg, [], []);
+assert(q1.intent === 'watch_now', 'AI Question 1 correctly classifies intent: watch_now');
+assert(q1.matchedChannels.length >= 5, `AI Question 1 returned ${q1.matchedChannels.length} live channels`);
+assert(q1.reasoning.length > 20, 'AI Question 1 provides explainable reasoning');
+
+// 3. Query 2: "Show me Canadian news channels."
+const q2 = queryAiAssistant("Show me Canadian news channels.", INITIAL_ALL_CHANNELS, epg, [], []);
+assert(q2.intent === 'canadian_news', 'AI Question 2 correctly classifies intent: canadian_news');
+assert(q2.matchedChannels.some(c => c.name.toLowerCase().includes('cbc') || c.name.toLowerCase().includes('ctv')), 'AI Question 2 includes CBC or CTV Canadian news');
+
+// 4. Query 3: "Find hockey programmes."
+const q3 = queryAiAssistant("Find hockey programmes.", INITIAL_ALL_CHANNELS, epg, [], []);
+assert(q3.intent === 'hockey', 'AI Question 3 correctly classifies intent: hockey');
+assert(q3.matchedSports.some(s => s.league === 'NHL'), 'AI Question 3 returns NHL hockey fixtures');
+
+// 5. Query 4: "What sports are available tonight?"
+const q4 = queryAiAssistant("What sports are available tonight?", INITIAL_ALL_CHANNELS, epg, [], []);
+assert(q4.intent === 'sports_tonight', 'AI Question 4 correctly classifies intent: sports_tonight');
+assert(q4.matchedSports.length >= 2, 'AI Question 4 returns tonight sports games');
+
+// 6. Query 5: "Recommend an action movie."
+const q5 = queryAiAssistant("Recommend an action movie.", INITIAL_ALL_CHANNELS, epg, [], []);
+assert(q5.intent === 'action_movie', 'AI Question 5 correctly classifies intent: action_movie');
+assert(q5.matchedChannels.some(c => c.group === 'Movies'), 'AI Question 5 recommends movie channels');
+
+// 7. Query 6: "Show me programmes similar to what I normally watch."
+const q6 = queryAiAssistant("Show me programmes similar to what I normally watch.", INITIAL_ALL_CHANNELS, epg, [], ['demo_why_tv_108_acc_college_football']);
+assert(q6.intent === 'personalized', 'AI Question 6 correctly classifies intent: personalized');
+assert(q6.summary.includes('Sports'), 'AI Question 6 detects Sports preference from profile');
+
+// 8. Query 7: "Find all available sports channels."
+const q7 = queryAiAssistant("Find all available sports channels.", INITIAL_ALL_CHANNELS, epg, [], []);
+assert(q7.intent === 'all_sports', 'AI Question 7 correctly classifies intent: all_sports');
+assert(q7.matchedChannels.length >= 10, `AI Question 7 finds ${q7.matchedChannels.length} sports channels (>= 10 required)`);
+
+// 9. AI Duplicate Channel Detection
+const duplicates = detectDuplicateChannels(INITIAL_ALL_CHANNELS);
+assert(duplicates.length >= 1, `AI Duplicate Channel Detection identified ${duplicates.length} multi-provider clusters`);
+assert(duplicates[0].similarityScore > 0.9, 'AI Duplicate similarity score > 90%');
+
+// 10. AI Predictive Categorization
+const categorizations = categorizeChannelsWithAi(INITIAL_ALL_CHANNELS.slice(0, 20));
+assert(categorizations.length === 20, 'AI classified 20 sample channels into normalized taxonomy');
+assert(categorizations.every(c => c.confidence >= 0.8), 'All AI classifications carry >= 80% confidence score');
 
 // ---------------------------------------------------------
 // FINAL AUDIT SUMMARY

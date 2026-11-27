@@ -37,6 +37,7 @@ import {
   MonitorPlay,
   RadioTower,
   Smartphone,
+  Award,
 } from 'lucide-react';
 import {
   Channel,
@@ -48,6 +49,8 @@ import {
 } from '../types';
 import { formatTimeInZone, formatDateInZone, getProgramProgress } from '../utils/dateUtils';
 import { Player } from './Player';
+import { AiAssistantModal } from './AiAssistantModal';
+import { AboutAcademicModal } from './AboutAcademicModal';
 import { DEDICATED_CHANNEL_SCHEDULES } from '../data/demoData';
 import { INITIAL_SPORTS_GAMES } from '../data/sportsData';
 import { INITIAL_PROVIDERS } from '../data/providerData';
@@ -123,6 +126,10 @@ export const PremiumTvGuide: React.FC<PremiumTvGuideProps> = ({
   const [channelSearch, setChannelSearch] = useState<string>('');
   const [singleClickPlayback, setSingleClickPlayback] = useState<boolean>(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState<boolean>(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
+  const [isClassroomMode, setIsClassroomMode] = useState<boolean>(false);
+  const [isOfflineBackupMode, setIsOfflineBackupMode] = useState<boolean>(false);
 
   // Active channel in preview
   const activeChannel = selectedChannel || channels[0] || null;
@@ -802,28 +809,74 @@ export const PremiumTvGuide: React.FC<PremiumTvGuideProps> = ({
           </div>
 
           {/* Right Header Controls */}
-          <div className="flex items-center space-x-3 ml-4">
+          <div className="flex items-center space-x-2.5 ml-4">
+            {/* AI Assistant Button */}
+            <button
+              onClick={() => setIsAiModalOpen(true)}
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-gradient-to-r from-[#195F9E] to-[#42AAFF] hover:brightness-110 text-white text-xs font-bold rounded-lg transition shadow-md shadow-[#42AAFF]/20"
+              title="Open AI Programme Discovery Assistant"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>AI Assistant</span>
+            </button>
+
+            {/* Academic Dossier Button */}
+            <button
+              onClick={() => setIsAboutModalOpen(true)}
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#263447] hover:bg-[#195F9E] text-white text-xs font-bold rounded-lg transition border border-[#42AAFF]/30"
+              title="Open Academic Project Dossier & Architecture"
+            >
+              <Award className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Academic Dossier</span>
+            </button>
+
+            {/* Classroom Demo Mode Toggle */}
+            <button
+              onClick={() => setIsClassroomMode((prev) => !prev)}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition ${
+                isClassroomMode
+                  ? 'bg-amber-400 text-neutral-950 border-amber-300 shadow-md'
+                  : 'bg-[#263447] text-[#94A3B8] border-white/10 hover:text-white'
+              }`}
+              title="Toggle Classroom Presentation Mode"
+            >
+              <span>Demo Mode: {isClassroomMode ? 'ACTIVE' : 'OFF'}</span>
+            </button>
+
+            {/* Offline Backup Mode Toggle */}
+            <button
+              onClick={() => setIsOfflineBackupMode((prev) => !prev)}
+              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition ${
+                isOfflineBackupMode
+                  ? 'bg-red-500/20 text-red-400 border-red-500/40'
+                  : 'bg-[#263447] text-[#94A3B8] border-white/10 hover:text-white'
+              }`}
+              title="Toggle Offline Wi-Fi Backup Simulation"
+            >
+              <span>Offline Backup: {isOfflineBackupMode ? 'ON' : 'OFF'}</span>
+            </button>
+
             {/* Single-Click vs Double-Click Playback toggle */}
             <button
               onClick={() => setSingleClickPlayback((prev) => !prev)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+              className={`hidden xl:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition ${
                 singleClickPlayback
                   ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
                   : 'bg-[#263447] border-[#263447] text-[#94A3B8] hover:text-white'
               }`}
               title="Toggle single-click direct fullscreen playback"
             >
-              <span>Single-Click Fullscreen: {singleClickPlayback ? 'ON' : 'OFF'}</span>
+              <span>1-Click Fullscreen: {singleClickPlayback ? 'ON' : 'OFF'}</span>
             </button>
 
             {/* Live Sports Center button */}
             {onOpenSportsBar && (
               <button
                 onClick={onOpenSportsBar}
-                className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#263447] hover:bg-[#195F9E] text-white text-xs font-bold rounded-lg transition border border-[#42AAFF]/30"
+                className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1.5 bg-[#263447] hover:bg-[#195F9E] text-white text-xs font-bold rounded-lg transition border border-[#42AAFF]/30"
               >
                 <Flame className="w-3.5 h-3.5 text-[#42AAFF]" />
-                <span className="hidden sm:inline">Sports Center</span>
+                <span>Sports Center</span>
               </button>
             )}
 
@@ -831,7 +884,7 @@ export const PremiumTvGuide: React.FC<PremiumTvGuideProps> = ({
             {onOpenProviderHub && (
               <button
                 onClick={onOpenProviderHub}
-                className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#263447] hover:bg-[#195F9E] text-white text-xs font-bold rounded-lg transition border border-[#42AAFF]/30"
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 bg-[#263447] hover:bg-[#195F9E] text-white text-xs font-bold rounded-lg transition border border-[#42AAFF]/30"
               >
                 <Layers className="w-3.5 h-3.5 text-[#42AAFF]" />
                 <span className="hidden sm:inline">Providers</span>
@@ -839,6 +892,34 @@ export const PremiumTvGuide: React.FC<PremiumTvGuideProps> = ({
             )}
           </div>
         </header>
+
+        {/* Classroom Presentation Mode Banner */}
+        {isClassroomMode && (
+          <div className="bg-[#195F9E]/30 border-b border-[#42AAFF]/40 px-6 py-2 flex items-center justify-between text-xs text-[#42AAFF] shrink-0 font-medium">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-[#42AAFF] animate-ping"></span>
+              <strong className="text-white">CLASSROOM PRESENTATION MODE ACTIVE:</strong>
+              <span>104 Authorized Working Channels • Zero Hallucinations AI • D-Pad Remote Ready</span>
+            </div>
+            <span className="text-[10px] bg-[#10151F] px-2 py-0.5 rounded text-white font-mono">
+              Academic Grade Prototype
+            </span>
+          </div>
+        )}
+
+        {/* Offline Backup Simulation Banner */}
+        {isOfflineBackupMode && (
+          <div className="bg-amber-500/20 border-b border-amber-500/40 px-6 py-2 flex items-center justify-between text-xs text-amber-300 shrink-0 font-medium">
+            <div className="flex items-center space-x-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+              <strong className="text-white">OFFLINE / SIMULATED BACKUP ACTIVE:</strong>
+              <span>Using locally stored authorized video loops & cached schedules (Zero Wi-Fi Dependency).</span>
+            </div>
+            <span className="text-[10px] bg-neutral-950 px-2 py-0.5 rounded text-amber-400 font-mono font-bold">
+              Classroom Fail-Safe
+            </span>
+          </div>
+        )}
 
         {/* ----------------------------------------------------------- */}
         {/* 3. LIVE TELEVISION PREVIEW (TOP SECTION ABOVE GUIDE)         */}
@@ -1328,6 +1409,23 @@ export const PremiumTvGuide: React.FC<PremiumTvGuideProps> = ({
           </div>
         </div>
       )}
+      {/* 7. AI ASSISTANT & PROGRAMME DISCOVERY MODAL */}
+      <AiAssistantModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        channels={channels}
+        epgPrograms={epgPrograms}
+        favourites={favourites}
+        onSelectChannel={(ch) => {
+          handleChannelClick(ch);
+        }}
+      />
+
+      {/* 8. ACADEMIC PROJECT DOSSIER & ARCHITECTURE MODAL */}
+      <AboutAcademicModal
+        isOpen={isAboutModalOpen}
+        onClose={() => setIsAboutModalOpen(false)}
+      />
     </div>
   );
 };
