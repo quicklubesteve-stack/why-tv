@@ -163,16 +163,16 @@ export const DEMO_CHANNELS: Channel[] = [
     sourceName: 'WHY TV Public Cable Essentials',
   },
   {
-    id: `${DEMO_SOURCE_ID}_108_mux_sports`,
+    id: `${DEMO_SOURCE_ID}_108_acc_college_football`,
     channelNumber: 108,
-    name: 'Prime Sports Arena',
-    logo: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=320&auto=format&fit=crop&q=60',
+    name: 'ACC College Football Live',
+    logo: 'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=320&auto=format&fit=crop&q=60',
     url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
     group: 'Sports',
-    tvgId: 'Prime.Sports.Arena',
-    tvgName: 'Prime Sports',
+    tvgId: 'ACCDN.Football.Live',
+    tvgName: 'ACC Football',
     sourceId: DEMO_SOURCE_ID,
-    sourceName: 'WHY TV Public Cable Essentials',
+    sourceName: 'Raycom Sports & ACCDN',
   },
   {
     id: `${DEMO_SOURCE_ID}_109_tv5_international`,
@@ -319,16 +319,16 @@ export const DEMO_CHANNELS: Channel[] = [
     sourceName: 'Bell Fibe TSN Hub',
   },
   {
-    id: `${DEMO_SOURCE_ID}_124_dazn_premier_football`,
+    id: `${DEMO_SOURCE_ID}_124_bein_sports_xtra`,
     channelNumber: 124,
-    name: 'DAZN Premier Football',
+    name: 'beIN Sports XTRA Soccer',
     logo: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=320&auto=format&fit=crop&q=60',
-    url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
+    url: 'https://bein-xtra-bein.amagi.tv/playlist.m3u8',
     group: 'Sports',
-    tvgId: 'DAZN.Premier.Live',
-    tvgName: 'DAZN Premier',
+    tvgId: 'beIN.Sports.XTRA',
+    tvgName: 'beIN Sports',
     sourceId: DEMO_SOURCE_ID,
-    sourceName: 'DAZN Sports Global',
+    sourceName: 'beIN Sports Global',
   },
   {
     id: `${DEMO_SOURCE_ID}_125_dazn_combat_zone`,
@@ -343,16 +343,16 @@ export const DEMO_CHANNELS: Channel[] = [
     sourceName: 'DAZN Sports Global',
   },
   {
-    id: `${DEMO_SOURCE_ID}_126_nfl_redzone_network`,
+    id: `${DEMO_SOURCE_ID}_126_sportsgrid_nfl_gameday`,
     channelNumber: 126,
-    name: 'NFL RedZone Network',
+    name: 'SportsGrid NFL Live GameDay',
     logo: 'https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=320&auto=format&fit=crop&q=60',
-    url: 'https://raycom-accdn-firetv.amagi.tv/playlist.m3u8',
+    url: 'https://sportsgrid-tribal.amagi.tv/playlist1080p.m3u8',
     group: 'Sports',
-    tvgId: 'NFL.RedZone.Live',
-    tvgName: 'NFL RedZone',
+    tvgId: 'SportsGrid.NFL.Live',
+    tvgName: 'SportsGrid NFL',
     sourceId: DEMO_SOURCE_ID,
-    sourceName: 'NFL & Major League Hub',
+    sourceName: 'SportsGrid Network',
   },
   {
     id: `${DEMO_SOURCE_ID}_127_cbs_sports_golazo`,
@@ -521,36 +521,35 @@ export interface ChannelScheduleDef {
 }
 
 export const DEDICATED_CHANNEL_SCHEDULES: Record<number, ChannelScheduleDef> = {
-  // 108: Prime Sports Arena -> Live Sunday NFL Football: Chiefs vs Bills
+  // 108: ACC College Football Live -> Live NCAA ACC College Football Game
   108: {
-    liveTitle: 'NFL Live Sunday Football: Kansas City Chiefs vs Buffalo Bills',
-    liveDesc: 'Patrick Mahomes leads the Chiefs against Josh Allen and the Bills in a prime-time AFC showdown. Live 4th quarter action.',
+    liveTitle: 'NCAA College Football Live: Clemson Tigers vs Florida State Seminoles',
+    liveDesc: 'Live ACC Saturday Football showdown between the Clemson Tigers and Florida State Seminoles broadcast live from Doak Campbell Stadium.',
     category: 'Sports',
     upcoming: [
-      { title: 'NFL Sunday Night Football: Detroit Lions vs Green Bay Packers', desc: 'NFC North rivals clash under the stadium lights at Lambeau Field.', category: 'Sports', durationMin: 180 },
-      { title: 'NFL GameDay Final & Post-Game Press Conferences', desc: 'Highlights, scores, and coach reactions from around the National Football League.', category: 'Sports', durationMin: 60 },
-      { title: 'NFL Total Access & Playoff Picture', desc: 'Wildcard race analysis, injury updates, and division race breakdowns.', category: 'Sports', durationMin: 60 },
-      { title: 'Good Morning Football: Monday Highlights Reel', desc: 'Top plays, mic\'d up segments, and power rankings.', category: 'Sports', durationMin: 120 },
+      { title: 'ACC Football Post-Game Live: Highlights & Press Conference', desc: 'Coach interviews, top defensive plays, and ACC championship race breakdown.', category: 'Sports', durationMin: 60 },
+      { title: 'ACC College Football Saturday: Miami Hurricanes vs North Carolina', desc: 'Coastal division rivalry matchup live from Kenan Memorial Stadium.', category: 'Sports', durationMin: 180 },
+      { title: 'Raycom Sports: ACC Football Highlights & Top 10 Plays', desc: 'Weekly highlight recap of the best touchdowns, sacks, and turnovers in the ACC.', category: 'Sports', durationMin: 60 },
+      { title: 'ACC Total Access: Bowl Game Projections & Power Rankings', desc: 'Expert analysis on national ranking positions and Heisman watch.', category: 'Sports', durationMin: 60 },
     ],
     past: [
-      { title: 'NFL GameDay Kickoff Live', desc: 'In-stadium pre-game warmups, injury reports, and weather forecasts.', category: 'Sports', durationMin: 60 },
-      { title: 'Sunday NFL Countdown: Expert Predictions', desc: 'Analysts debate key match-ups, fantasy picks, and game plans.', category: 'Sports', durationMin: 90 },
+      { title: 'ACC Football Tailgate & Pre-Game Kickoff', desc: 'Pregame breakdown, marching band traditions, and injury reports.', category: 'Sports', durationMin: 60 },
+      { title: 'College Football Countdown: ACC Saturday Preview', desc: 'Keys to victory and in-depth tactical preview of today\'s showdown.', category: 'Sports', durationMin: 90 },
     ]
   },
-  // 126: NFL RedZone Network -> Live RedZone Quad Box
+  // 126: SportsGrid NFL Live GameDay -> Live Bills vs Chiefs In-Game Coverage & Odds
   126: {
-    liveTitle: 'NFL RedZone Live: Every Touchdown from Every Sunday Game',
-    liveDesc: 'Host Scott Hanson takes you through every snap, field goal, and goal-line battle live commercial-free.',
+    liveTitle: 'NFL GameDay Live: Kansas City Chiefs vs Buffalo Bills In-Game Analysis',
+    liveDesc: 'Live real-time coverage, drive-by-drive live scores, player props, and betting analytics for the Chiefs vs Bills thriller.',
     category: 'Sports',
     upcoming: [
-      { title: 'NFL RedZone: Sunday Afternoon Quad Box & Blitz', desc: 'Simultaneous 4-game split coverage of late afternoon NFL kickoffs.', category: 'Sports', durationMin: 180 },
-      { title: 'NFL RedZone Final Drive: The Witching Hour', desc: 'Every fourth-quarter touchdown and dramatic finish from around the league.', category: 'Sports', durationMin: 60 },
-      { title: 'NFL RedZone Highlights & GameDay Wrap-Up', desc: 'Continuous loop of every single touchdown scored across Sunday football.', category: 'Sports', durationMin: 120 },
-      { title: 'NFL Fantasy Live: Week-in-Review Stats', desc: 'Top fantasy performers, waiver wire recommendations, and yardage leaders.', category: 'Sports', durationMin: 60 },
+      { title: 'NFL Live Sunday Blitz: Detroit Lions vs Green Bay Packers', desc: 'Live in-game updates, drive charts, and live betting lines for Sunday Night Football.', category: 'Sports', durationMin: 180 },
+      { title: 'NFL GameDay Final: Sunday Wrap & Bad Beats', desc: 'Recapping every final score, spread cover, and fourth-quarter comeback.', category: 'Sports', durationMin: 60 },
+      { title: 'SportsGrid NFL Monday Morning Line: Playoff Standings', desc: 'Early lines and power rankings heading into Monday Night Football.', category: 'Sports', durationMin: 60 },
     ],
     past: [
-      { title: 'NFL RedZone Pre-Flight: Sunday Game Previews', desc: 'Lineups, weather radar, and inactive lists heading into 1:00 PM kickoffs.', category: 'Sports', durationMin: 60 },
-      { title: 'NFL GameDay Morning: First Look', desc: 'Opening analysis and tailgate reports across the country.', category: 'Sports', durationMin: 90 },
+      { title: 'NFL Pro Football Early Kickoff Preview', desc: 'Weather impacts, starting lineups, and closing line movement.', category: 'Sports', durationMin: 60 },
+      { title: 'Sunday Morning Football Bets & Picks', desc: 'Expert consensus picks and prop bets across today\'s NFL slate.', category: 'Sports', durationMin: 90 },
     ]
   },
   // 122: TSN 1 Sports Center -> CFL Football Live

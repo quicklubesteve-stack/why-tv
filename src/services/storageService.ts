@@ -78,7 +78,7 @@ export class StorageService {
           const canonicalMap = new Map(DEMO_CHANNELS.map((c) => [c.channelNumber, c]));
           const upgraded = parsed.map((c) => {
             const canonical = canonicalMap.get(c.channelNumber);
-            if (canonical && (c.url.includes('test_001') || c.sourceId === DEMO_SOURCE_ID)) {
+            if (canonical && (c.url.includes('test_001') || c.sourceId === DEMO_SOURCE_ID || c.channelNumber === 108 || c.channelNumber === 126 || c.channelNumber === 124)) {
               return {
                 ...c,
                 url: canonical.url,
@@ -87,6 +87,7 @@ export class StorageService {
                 group: canonical.group,
                 tvgId: canonical.tvgId,
                 tvgName: canonical.tvgName,
+                sourceName: canonical.sourceName,
               };
             }
             return c;
@@ -260,16 +261,20 @@ export class StorageService {
               .map((p) => p.channelId)
           );
 
-          // Check if football is represented
+          // Check if football is represented and ensure no outdated Prime Sports / Chiefs on Ch 108
+          const hasStaleCh108 = parsed.some(
+            (p) => (p.channelId.includes('108') && p.title.toLowerCase().includes('chiefs')) || p.channelId.includes('Prime.Sports.Arena')
+          );
           const coversFootball = parsed.some(
             (p) =>
-              p.title.toLowerCase().includes('chiefs') ||
+              p.title.toLowerCase().includes('clemson') ||
               p.title.toLowerCase().includes('football') ||
+              p.title.toLowerCase().includes('ncaa') ||
               p.title.toLowerCase().includes('nfl')
           );
 
-          // If at least 70% of channels have currently active programs and football is covered, keep cache
-          if (activeChannelIds.size >= Math.min(channels.length * 0.7, 10) && coversFootball) {
+          // If at least 70% of channels have currently active programs, football is covered, and no stale 108, keep cache
+          if (!hasStaleCh108 && activeChannelIds.size >= Math.min(channels.length * 0.7, 10) && coversFootball) {
             return parsed;
           }
         }

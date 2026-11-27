@@ -367,27 +367,27 @@ const nflGame = footballResults.find(r => r.type === 'live_game' && r.title.incl
 assert(nflGame !== undefined, 'Found live NFL game fixture (Chiefs vs Bills) for query "football"');
 assert(nflGame.isLive === true, 'NFL game fixture is flagged with isLive: true');
 assert(nflGame.liveClockOrStatus.includes('4th'), 'NFL game fixture carries live period clock (4th quarter)');
-assert(nflGame.channel.channelNumber === 108, 'NFL game routes directly to broadcast channel CH 108');
+assert(nflGame.channel.channelNumber === 126, 'NFL game routes directly to broadcast channel CH 126 (SportsGrid NFL)');
 assert(nflGame.channel.url.startsWith('https://'), 'Game broadcast channel has valid playable stream URL');
 
 // Soccer football detection under "football"
 const soccerGame = footballResults.find(r => r.type === 'live_game' && r.title.includes('Arsenal'));
 assert(soccerGame !== undefined, 'Found Premier League football fixture (Arsenal vs Man City) for query "football"');
-assert(soccerGame.channel.channelNumber === 124, 'Arsenal match routes to DAZN Premier Football (CH 124)');
+assert(soccerGame.channel.channelNumber === 124, 'Arsenal match routes to beIN Sports XTRA Soccer (CH 124)');
 
 // ---------------------------------------------------------
 // VERIFY PROPER SHOWS AIRING ON PROPER CHANNELS (USER FIX)
 // ---------------------------------------------------------
 console.log('\n[User Fix Verification] Testing Proper Shows on Proper Football Channels...');
-const primeSportsEpg = epg.filter(p => p.channelId === 'Prime.Sports.Arena');
-const livePrimeShow = primeSportsEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
-assert(livePrimeShow !== undefined, 'Found live active show on Prime Sports Arena right now');
-assert(livePrimeShow.title.includes('NFL Live Sunday Football') && livePrimeShow.title.includes('Chiefs'), `Live show on Prime Sports is NFL Sunday Football Chiefs vs Bills, got "${livePrimeShow.title}"`);
+const collegeSportsEpg = epg.filter(p => p.channelId === 'ACCDN.Football.Live');
+const liveCollegeShow = collegeSportsEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+assert(liveCollegeShow !== undefined, 'Found live active show on ACC College Football Live right now');
+assert(liveCollegeShow.title.includes('Clemson') && liveCollegeShow.title.includes('Florida State'), `Live show on Ch 108 is Clemson vs FSU College Football, got "${liveCollegeShow.title}"`);
 
-const redzoneEpg = epg.filter(p => p.channelId === 'NFL.RedZone.Live');
-const liveRedzoneShow = redzoneEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
-assert(liveRedzoneShow !== undefined, 'Found live active show on NFL RedZone right now');
-assert(liveRedzoneShow.title.includes('NFL RedZone Live'), `Live show on NFL RedZone is proper RedZone broadcast, got "${liveRedzoneShow.title}"`);
+const sportsGridEpg = epg.filter(p => p.channelId === 'SportsGrid.NFL.Live');
+const liveSportsGridShow = sportsGridEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
+assert(liveSportsGridShow !== undefined, 'Found live active show on SportsGrid NFL right now');
+assert(liveSportsGridShow.title.includes('NFL GameDay Live'), `Live show on SportsGrid is proper NFL GameDay broadcast, got "${liveSportsGridShow.title}"`);
 
 const cflEpg = epg.filter(p => p.channelId === 'TSN.1.ca');
 const liveCflShow = cflEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
@@ -398,7 +398,7 @@ assert(liveCflShow.title.includes('CFL Football Live'), `Live show on TSN 1 is p
 const chiefsResults = searchLiveContent('chiefs', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
 assert(chiefsResults.length >= 1, 'Searching team name "chiefs" finds matching live match');
 assert(chiefsResults[0].title.includes('Kansas City Chiefs'), 'Top match title contains Kansas City Chiefs');
-assert(chiefsResults[0].channel.name === 'Prime Sports Arena', 'Kansas City Chiefs match tunes to Prime Sports Arena');
+assert(chiefsResults[0].channel.name === 'SportsGrid NFL Live GameDay', 'Kansas City Chiefs match tunes to SportsGrid NFL Live GameDay');
 
 // 3. Search for "hockey" (Winter sports search)
 const hockeyResults = searchLiveContent('hockey', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
@@ -459,8 +459,8 @@ assert(hasTsn, 'Bell Fibe TSN channels present in expanded fleet');
 const hasDazn = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('dazn'));
 assert(hasDazn, 'DAZN Sports channels present in expanded fleet');
 
-const hasRedZone = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('redzone'));
-assert(hasRedZone, 'NFL RedZone live channel present in expanded fleet');
+const hasNfl = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('nfl') || c.name.toLowerCase().includes('sportsgrid'));
+assert(hasNfl, 'NFL live channel (SportsGrid NFL Live GameDay) present in expanded fleet');
 
 const hasGolazo = DEMO_CHANNELS.some(c => c.name.toLowerCase().includes('golazo'));
 assert(hasGolazo, 'CBS Sports Golazo football channel present in expanded fleet');
@@ -491,10 +491,10 @@ const baseballMatches = searchLiveContent('baseball', DEMO_CHANNELS, epg, INITIA
 assert(baseballMatches.length >= 1, 'Search query "baseball" returns Blue Jays vs Yankees MLB match');
 assert(baseballMatches[0].channel.channelNumber === 120, 'Blue Jays match tunes to Sportsnet East (CH 120)');
 
-// 3. NFL RedZone search
-const redzoneMatches = searchLiveContent('redzone', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
-assert(redzoneMatches.length >= 1, 'Search query "redzone" returns NFL RedZone Live');
-assert(redzoneMatches[0].channel.channelNumber === 126, 'NFL RedZone tunes to CH 126');
+// 3. NFL GameDay search
+const nflMatches = searchLiveContent('nfl', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
+assert(nflMatches.length >= 1, 'Search query "nfl" returns NFL Live GameDay');
+assert(nflMatches.some(m => m.channel.channelNumber === 126), 'NFL GameDay tunes to CH 126');
 
 // 4. CFL Football search
 const cflMatches = searchLiveContent('cfl', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
@@ -738,59 +738,60 @@ assert(!hasTest001, 'Zero sports channels use test_001 (cartoon/rabbit) stream U
 
 // 2. Football channels use legitimate live sports streams (Amagi ACC Football / Akamai)
 const ch108 = DEMO_CHANNELS.find(c => c.channelNumber === 108);
-assert(ch108 !== undefined, 'Channel 108 (Prime Sports Arena) exists');
-assert(ch108.url.includes('amagi.tv') || ch108.url.includes('akamaized.net'), 'Channel 108 uses authorized live sports stream (Amagi ACC Football)');
+assert(ch108 !== undefined, 'Channel 108 (ACC College Football Live) exists');
+assert(ch108.url.includes('raycom-accdn-firetv.amagi.tv'), 'Channel 108 uses authorized ACC College Football stream');
 
 const ch126 = DEMO_CHANNELS.find(c => c.channelNumber === 126);
-assert(ch126 !== undefined, 'Channel 126 (NFL RedZone Network) exists');
-assert(ch126.url.includes('amagi.tv') || ch126.url.includes('akamaized.net'), 'Channel 126 uses live sports stream');
+assert(ch126 !== undefined, 'Channel 126 (SportsGrid NFL Live GameDay) exists');
+assert(ch126.url.includes('sportsgrid-tribal.amagi.tv'), 'Channel 126 uses live SportsGrid NFL stream');
 
 const ch124 = DEMO_CHANNELS.find(c => c.channelNumber === 124);
-assert(ch124 !== undefined, 'Channel 124 (DAZN Premier Football) exists');
-assert(ch124.url.includes('amagi.tv'), 'Channel 124 uses live football stream');
+assert(ch124 !== undefined, 'Channel 124 (beIN Sports XTRA Soccer) exists');
+assert(ch124.url.includes('bein-xtra-bein.amagi.tv'), 'Channel 124 uses live beIN Sports soccer stream');
 
 // 3. Live Football game schedules are accurate in INITIAL_SPORTS_GAMES
-const nflGame1 = INITIAL_SPORTS_GAMES.find(g => g.channelNumber === 108 && g.status === 'live');
-assert(nflGame1 !== undefined, 'Live NFL football game found for Channel 108');
-assert(nflGame1.homeTeam.name.includes('Chiefs') && nflGame1.awayTeam.name.includes('Bills'), 'Ch 108 features live Chiefs vs Bills NFL game');
-assert(nflGame1.broadcaster.includes('Prime Sports Arena'), 'Ch 108 broadcaster metadata aligned');
+const ncaaGame1 = INITIAL_SPORTS_GAMES.find(g => g.channelNumber === 108 && g.status === 'live');
+assert(ncaaGame1 !== undefined, 'Live College Football game found for Channel 108');
+assert(ncaaGame1.homeTeam.name.includes('Florida State') && ncaaGame1.awayTeam.name.includes('Clemson'), 'Ch 108 features live Clemson vs FSU game');
+assert(ncaaGame1.broadcaster.includes('ACC College Football Live'), 'Ch 108 broadcaster metadata aligned');
 
-const nflGame2 = INITIAL_SPORTS_GAMES.find(g => g.channelNumber === 126 && g.status === 'live');
-assert(nflGame2 !== undefined, 'Live NFL game found for Channel 126');
-assert(nflGame2.broadcaster.includes('NFL RedZone'), 'Ch 126 broadcaster metadata aligned');
+const nflGame1 = INITIAL_SPORTS_GAMES.find(g => g.channelNumber === 126 && g.status === 'live');
+assert(nflGame1 !== undefined, 'Live NFL GameDay coverage found for Channel 126');
+assert(nflGame1.homeTeam.name.includes('Chiefs') && nflGame1.awayTeam.name.includes('Bills'), 'Ch 126 features live Chiefs vs Bills analysis');
+assert(nflGame1.broadcaster.includes('SportsGrid NFL'), 'Ch 126 broadcaster metadata aligned');
 
 // 4. Dynamic EPG contains active live football programs right now
 const sportsEpg = generateDynamicDemoEpg(DEMO_CHANNELS);
 const live108 = sportsEpg.find(p => (p.channelId === ch108.tvgId || p.channelId === ch108.id) && new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
 assert(live108 !== undefined, 'Live EPG program actively playing right now on Ch 108');
-assert(live108.title.toLowerCase().includes('chiefs') || live108.title.toLowerCase().includes('nfl'), `Ch 108 program title accurate: "${live108?.title}"`);
+assert(live108.title.toLowerCase().includes('clemson') || live108.title.toLowerCase().includes('football'), `Ch 108 program title accurate: "${live108?.title}"`);
 
 // 5. Search for "football" returns exact football channels
 const footballSearchResults = searchLiveContent('football', DEMO_CHANNELS, sportsEpg, INITIAL_SPORTS_GAMES);
 assert(footballSearchResults.length >= 2, `Searching "football" returns ${footballSearchResults.length} live matches & channels`);
-assert(footballSearchResults.some(r => r.channel.channelNumber === 108), 'Searching "football" returns Ch 108 (Prime Sports Arena)');
-assert(footballSearchResults.some(r => r.channel.channelNumber === 126), 'Searching "football" returns Ch 126 (NFL RedZone)');
-assert(footballSearchResults.some(r => r.type === 'live_game' && r.category === 'NFL'), 'Searching "football" returns live NFL sports games with score bug');
+assert(footballSearchResults.some(r => r.channel.channelNumber === 108), 'Searching "football" returns Ch 108 (ACC College Football Live)');
+assert(footballSearchResults.some(r => r.channel.channelNumber === 126), 'Searching "football" returns Ch 126 (SportsGrid NFL Live GameDay)');
+assert(footballSearchResults.some(r => r.type === 'live_game' && (r.category === 'NCAA' || r.category === 'NFL')), 'Searching "football" returns live football sports games with score bug');
 
 // ---------------------------------------------------------
 // TEST SUITE 21: DEDICATED SPORTS HUB & MULTI-VIEW INTEGRATION
 // ---------------------------------------------------------
 console.log('\n[Suite 21] Testing Dedicated Sports Hub & Matchday Center...');
-const activeFootballGames = INITIAL_SPORTS_GAMES.filter(g => (g.league === 'NFL' || g.league === 'SOCCER') && g.status === 'live');
+const activeFootballGames = INITIAL_SPORTS_GAMES.filter(g => (g.league === 'NFL' || g.league === 'NCAA' || g.league === 'SOCCER') && g.status === 'live');
 assert(activeFootballGames.length >= 4, `At least 4 live football/soccer games active in Matchday Center (found ${activeFootballGames.length})`);
 
 const chiefsGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Chiefs'));
 assert(chiefsGame !== undefined, 'Chiefs vs Bills NFL live marquee game exists');
 assert(chiefsGame.homeTeam.score > 0 && chiefsGame.awayTeam.score > 0, 'Scores actively tracked for live Chiefs game');
-assert(chiefsGame.channelNumber === 108, 'Chiefs marquee game mapped to Ch 108');
+assert(chiefsGame.channelNumber === 126, 'Chiefs marquee game mapped to Ch 126 (SportsGrid NFL Live GameDay)');
 
-const lionsGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Lions'));
-assert(lionsGame !== undefined, 'Lions vs Packers NFL game exists');
-assert(lionsGame.channelNumber === 126, 'Lions game mapped to Ch 126 (NFL RedZone)');
+const collegeGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Florida State'));
+assert(collegeGame !== undefined, 'Clemson vs Florida State college football game exists');
+assert(collegeGame.channelNumber === 108, 'College football game mapped to Ch 108 (ACC College Football Live)');
 
 const arsenalGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Arsenal'));
 assert(arsenalGame !== undefined, 'Arsenal vs Man City Premier League game exists');
-assert(arsenalGame.channelNumber === 124, 'Arsenal game mapped to Ch 124 (DAZN Premier Football)');
+assert(arsenalGame.channelNumber === 124, 'Arsenal game mapped to Ch 124 (beIN Sports XTRA Soccer)');
 
 // ---------------------------------------------------------
 // FINAL AUDIT SUMMARY

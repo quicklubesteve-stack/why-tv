@@ -203,7 +203,7 @@ export interface CatchupCalculation {
   restartUrl?: string;
 }
 
-export type SportLeague = 'NHL' | 'NBA' | 'SOCCER' | 'MLB' | 'NFL' | 'MOTORSPORT' | 'GOLF' | 'COMBAT';
+export type SportLeague = 'NHL' | 'NBA' | 'SOCCER' | 'MLB' | 'NFL' | 'MOTORSPORT' | 'GOLF' | 'COMBAT' | 'NCAA';
 
 export interface SportsTeam {
   name: string;

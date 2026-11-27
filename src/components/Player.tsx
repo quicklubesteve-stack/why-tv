@@ -113,6 +113,7 @@ export const Player: React.FC<PlayerProps> = ({
   const [vodDuration, setVodDuration] = useState<number>(0);
   const [soundMode, setSoundMode] = useState<SoundMode>('standard');
   const [showSoundMenu, setShowSoundMenu] = useState<boolean>(false);
+  const [showScoreBug, setShowScoreBug] = useState<boolean>(true);
 
   const [errorState, setErrorState] = useState<{
     type: 'cors' | 'offline' | 'codec' | 'generic';
@@ -738,9 +739,9 @@ export const Player: React.FC<PlayerProps> = ({
         </div>
       )}
 
-      {/* Permanent Live Sports Broadcast Score Bug (Always visible during live games, just like television) */}
-      {activeLiveGame && !vodItem && (
-        <div className="absolute top-4 left-4 z-20 pointer-events-auto flex items-stretch bg-neutral-950/90 backdrop-blur-md border border-neutral-700/90 rounded-xl overflow-hidden shadow-2xl transition-all">
+      {/* Permanent Live Sports Broadcast Score Bug (Always visible during live games, dismissible via X) */}
+      {showScoreBug && activeLiveGame && !vodItem && (
+        <div className="absolute top-4 left-4 z-20 pointer-events-auto flex items-stretch bg-neutral-950/90 backdrop-blur-md border border-neutral-700/90 rounded-xl overflow-hidden shadow-2xl transition-all group">
           <div className="bg-red-600 px-3 py-2 flex flex-col items-center justify-center text-white shrink-0">
             <span className="text-[10px] font-black uppercase tracking-wider">{activeLiveGame.league}</span>
             <span className="flex items-center space-x-1 text-[9px] font-bold text-red-100">
@@ -773,6 +774,13 @@ export const Player: React.FC<PlayerProps> = ({
               {activeLiveGame.statsSnippet}
             </div>
           </div>
+          <button
+            onClick={() => setShowScoreBug(false)}
+            className="px-2 flex items-center justify-center bg-black/60 hover:bg-red-600/80 text-neutral-400 hover:text-white transition-colors"
+            title="Dismiss score overlay"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
@@ -908,6 +916,22 @@ export const Player: React.FC<PlayerProps> = ({
                 <Trophy className="w-4 h-4 text-amber-400" />
                 <span className="hidden sm:inline">Scores</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+              </button>
+            )}
+
+            {/* Toggle On-screen Score Bug if Game is Live */}
+            {activeLiveGame && !vodItem && (
+              <button
+                onClick={() => setShowScoreBug((prev) => !prev)}
+                className={`px-2.5 py-2 rounded-lg border shadow text-xs flex items-center space-x-1 cable-focus-ring ${
+                  showScoreBug
+                    ? 'bg-amber-600/30 text-amber-300 border-amber-600/50'
+                    : 'bg-neutral-950/80 hover:bg-neutral-800 text-neutral-400 border-neutral-700'
+                }`}
+                title={showScoreBug ? 'Hide Live Score Bug' : 'Show Live Score Bug'}
+              >
+                <Activity className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden md:inline">{showScoreBug ? 'Scorebug On' : 'Scorebug Off'}</span>
               </button>
             )}
 
