@@ -382,12 +382,12 @@ console.log('\n[User Fix Verification] Testing Proper Shows on Proper Football C
 const collegeSportsEpg = epg.filter(p => p.channelId === 'ACCDN.Football.Live');
 const liveCollegeShow = collegeSportsEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
 assert(liveCollegeShow !== undefined, 'Found live active show on ACC College Football Live right now');
-assert(liveCollegeShow.title.includes('Clemson') && liveCollegeShow.title.includes('Florida State'), `Live show on Ch 108 is Clemson vs FSU College Football, got "${liveCollegeShow.title}"`);
+assert(liveCollegeShow.title.includes('Texas Tech') || liveCollegeShow.title.includes('TCU'), `Live show on Ch 108 is Texas Tech vs TCU Thanksgiving Game, got "${liveCollegeShow.title}"`);
 
 const sportsGridEpg = epg.filter(p => p.channelId === 'SportsGrid.NFL.Live');
 const liveSportsGridShow = sportsGridEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
 assert(liveSportsGridShow !== undefined, 'Found live active show on SportsGrid NFL right now');
-assert(liveSportsGridShow.title.includes('NFL GameDay Live'), `Live show on SportsGrid is proper NFL GameDay broadcast, got "${liveSportsGridShow.title}"`);
+assert(liveSportsGridShow.title.includes('NFL') && (liveSportsGridShow.title.includes('Bills') || liveSportsGridShow.title.includes('Chiefs') || liveSportsGridShow.title.includes('GameDay')), `Live show on SportsGrid is proper NFL Thanksgiving broadcast, got "${liveSportsGridShow.title}"`);
 
 const cflEpg = epg.filter(p => p.channelId === 'TSN.1.ca');
 const liveCflShow = cflEpg.find(p => new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
@@ -397,7 +397,7 @@ assert(liveCflShow.title.includes('CFL Football Live'), `Live show on TSN 1 is p
 // 2. Search for "chiefs" (Team name keyword search)
 const chiefsResults = searchLiveContent('chiefs', DEMO_CHANNELS, epg, INITIAL_SPORTS_GAMES);
 assert(chiefsResults.length >= 1, 'Searching team name "chiefs" finds matching live match');
-assert(chiefsResults[0].title.includes('Kansas City Chiefs'), 'Top match title contains Kansas City Chiefs');
+assert(chiefsResults[0].title.includes('Kansas City Chiefs') || chiefsResults[0].title.includes('Bills'), 'Top match title contains Kansas City Chiefs / Bills');
 assert(chiefsResults[0].channel.name === 'SportsGrid NFL Live GameDay', 'Kansas City Chiefs match tunes to SportsGrid NFL Live GameDay');
 
 // 3. Search for "hockey" (Winter sports search)
@@ -752,19 +752,21 @@ assert(ch124.url.includes('bein-xtra-bein.amagi.tv'), 'Channel 124 uses live beI
 // 3. Live Football game schedules are accurate in INITIAL_SPORTS_GAMES
 const ncaaGame1 = INITIAL_SPORTS_GAMES.find(g => g.channelNumber === 108 && g.status === 'live');
 assert(ncaaGame1 !== undefined, 'Live College Football game found for Channel 108');
-assert(ncaaGame1.homeTeam.name.includes('Florida State') && ncaaGame1.awayTeam.name.includes('Clemson'), 'Ch 108 features live Clemson vs FSU game');
+assert(ncaaGame1.homeTeam.name.includes('Texas Tech') && ncaaGame1.awayTeam.name.includes('TCU'), 'Ch 108 features live Texas Tech vs TCU game');
+assert(ncaaGame1.homeTeam.score === 31 && ncaaGame1.awayTeam.score === 24, 'Ch 108 score is TTU 31 - TCU 24 for Thanksgiving Nov 26 2026');
 assert(ncaaGame1.broadcaster.includes('ACC College Football Live'), 'Ch 108 broadcaster metadata aligned');
 
 const nflGame1 = INITIAL_SPORTS_GAMES.find(g => g.channelNumber === 126 && g.status === 'live');
 assert(nflGame1 !== undefined, 'Live NFL GameDay coverage found for Channel 126');
-assert(nflGame1.homeTeam.name.includes('Chiefs') && nflGame1.awayTeam.name.includes('Bills'), 'Ch 126 features live Chiefs vs Bills analysis');
+assert(nflGame1.homeTeam.name.includes('Bills') && nflGame1.awayTeam.name.includes('Chiefs'), 'Ch 126 features live Bills vs Chiefs Thanksgiving Primetime');
+assert(nflGame1.homeTeam.score === 28 && nflGame1.awayTeam.score === 21, 'Ch 126 score is BUF 28 - KC 21 for Thanksgiving Nov 26 2026');
 assert(nflGame1.broadcaster.includes('SportsGrid NFL'), 'Ch 126 broadcaster metadata aligned');
 
 // 4. Dynamic EPG contains active live football programs right now
 const sportsEpg = generateDynamicDemoEpg(DEMO_CHANNELS);
 const live108 = sportsEpg.find(p => (p.channelId === ch108.tvgId || p.channelId === ch108.id) && new Date(p.start).getTime() <= now && new Date(p.end).getTime() > now);
 assert(live108 !== undefined, 'Live EPG program actively playing right now on Ch 108');
-assert(live108.title.toLowerCase().includes('clemson') || live108.title.toLowerCase().includes('football'), `Ch 108 program title accurate: "${live108?.title}"`);
+assert(live108.title.toLowerCase().includes('texas tech') || live108.title.toLowerCase().includes('football'), `Ch 108 program title accurate: "${live108?.title}"`);
 
 // 5. Search for "football" returns exact football channels
 const footballSearchResults = searchLiveContent('football', DEMO_CHANNELS, sportsEpg, INITIAL_SPORTS_GAMES);
@@ -780,13 +782,14 @@ console.log('\n[Suite 21] Testing Dedicated Sports Hub & Matchday Center...');
 const activeFootballGames = INITIAL_SPORTS_GAMES.filter(g => (g.league === 'NFL' || g.league === 'NCAA' || g.league === 'SOCCER') && g.status === 'live');
 assert(activeFootballGames.length >= 4, `At least 4 live football/soccer games active in Matchday Center (found ${activeFootballGames.length})`);
 
-const chiefsGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Chiefs'));
-assert(chiefsGame !== undefined, 'Chiefs vs Bills NFL live marquee game exists');
-assert(chiefsGame.homeTeam.score > 0 && chiefsGame.awayTeam.score > 0, 'Scores actively tracked for live Chiefs game');
-assert(chiefsGame.channelNumber === 126, 'Chiefs marquee game mapped to Ch 126 (SportsGrid NFL Live GameDay)');
+const billsGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Bills') && g.awayTeam.name.includes('Chiefs'));
+assert(billsGame !== undefined, 'Bills vs Chiefs NFL Thanksgiving live marquee game exists');
+assert(billsGame.homeTeam.score === 28 && billsGame.awayTeam.score === 21, 'Scores BUF 28 - KC 21 accurately tracked for Nov 26 2026 Thanksgiving game');
+assert(billsGame.channelNumber === 126, 'Bills vs Chiefs marquee game mapped to Ch 126 (SportsGrid NFL Live GameDay)');
 
-const collegeGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Florida State'));
-assert(collegeGame !== undefined, 'Clemson vs Florida State college football game exists');
+const collegeGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Texas Tech'));
+assert(collegeGame !== undefined, 'Texas Tech vs TCU college football Thanksgiving game exists');
+assert(collegeGame.homeTeam.score === 31 && collegeGame.awayTeam.score === 24, 'Texas Tech vs TCU score verified as 31-24');
 assert(collegeGame.channelNumber === 108, 'College football game mapped to Ch 108 (ACC College Football Live)');
 
 const arsenalGame = INITIAL_SPORTS_GAMES.find(g => g.homeTeam.name.includes('Arsenal'));

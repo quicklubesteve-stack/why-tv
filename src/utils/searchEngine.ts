@@ -5,9 +5,10 @@ import { INITIAL_SPORTS_GAMES } from '../data/sportsData';
  * Semantic keyword synonyms for sport and media terms
  */
 const SYNONYMS: Record<string, string[]> = {
-  football: ['football', 'nfl', 'ncaa', 'college football', 'acc', 'clemson', 'seminoles', 'soccer', 'chiefs', 'bills', 'lions', 'packers', 'touchdown', 'quarterback', 'gridiron', 'epl', 'premier league'],
-  ncaa: ['ncaa', 'college football', 'football', 'clemson', 'seminoles', 'acc', 'tigers', 'florida state', 'wolverines', 'buckeyes'],
-  nfl: ['nfl', 'football', 'sportsgrid', 'redzone', 'chiefs', 'bills', 'lions', 'packers', 'mahomes', 'goff', 'super bowl'],
+  football: ['football', 'nfl', 'ncaa', 'college football', 'thanksgiving', 'bills', 'chiefs', 'allen', 'mahomes', 'lions', 'bears', 'cowboys', 'eagles', 'texas tech', 'tcu', 'red raiders', 'horned frogs', 'acc', 'soccer', 'touchdown', 'quarterback', 'gridiron', 'epl', 'premier league'],
+  ncaa: ['ncaa', 'college football', 'football', 'thanksgiving', 'texas tech', 'tcu', 'red raiders', 'horned frogs', 'acc', 'clemson', 'seminoles', 'tigers', 'florida state', 'wolverines', 'buckeyes'],
+  nfl: ['nfl', 'football', 'thanksgiving', 'bills', 'chiefs', 'allen', 'mahomes', 'sportsgrid', 'redzone', 'lions', 'bears', 'cowboys', 'eagles', 'highmark', 'goff', 'super bowl'],
+  thanksgiving: ['thanksgiving', 'football', 'nfl', 'bills', 'chiefs', 'lions', 'bears', 'cowboys', 'eagles', 'texas tech', 'tcu'],
   redzone: ['redzone', 'nfl', 'sportsgrid', 'football', 'chiefs', 'bills'],
   soccer: ['soccer', 'football', 'premier league', 'champions league', 'arsenal', 'man city', 'real madrid', 'bayern', 'fifa', 'mls'],
   hockey: ['hockey', 'nhl', 'leafs', 'canadiens', 'oilers', 'flames', 'bruins', 'canucks', 'mcdavid', 'stanley cup'],
@@ -63,8 +64,8 @@ export function searchLiveContent(
       ${game.awayTeam.abbreviation} 
       ${game.broadcaster || ''} 
       ${game.statsSnippet || ''}
-      ${game.league === 'NCAA' ? 'football college football ncaa acc ncaa football clemson seminoles wolverines' : ''}
-      ${game.league === 'NFL' ? 'football nfl gridiron chiefs bills mahomes' : ''}
+      ${game.league === 'NCAA' ? 'football college football ncaa acc ncaa football clemson seminoles wolverines texas tech tcu red raiders horned frogs thanksgiving' : ''}
+      ${game.league === 'NFL' ? 'football nfl gridiron chiefs bills mahomes allen lions bears cowboys eagles thanksgiving highmark' : ''}
       ${game.league === 'SOCCER' ? 'football soccer premier league' : ''}
       ${game.league === 'NHL' ? 'hockey nhl' : ''}
       ${game.league === 'NBA' ? 'basketball nba' : ''}

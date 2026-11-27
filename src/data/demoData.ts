@@ -521,35 +521,34 @@ export interface ChannelScheduleDef {
 }
 
 export const DEDICATED_CHANNEL_SCHEDULES: Record<number, ChannelScheduleDef> = {
-  // 108: ACC College Football Live -> Live NCAA ACC College Football Game
+  // 108: ACC College Football Live -> Thanksgiving Night College Football
   108: {
-    liveTitle: 'NCAA College Football Live: Clemson Tigers vs Florida State Seminoles',
-    liveDesc: 'Live ACC Saturday Football showdown between the Clemson Tigers and Florida State Seminoles broadcast live from Doak Campbell Stadium.',
+    liveTitle: 'College Football Thanksgiving Night: TCU Horned Frogs at Texas Tech Red Raiders',
+    liveDesc: 'Live Thanksgiving Thursday rivalry clash from Jones AT&T Stadium in Lubbock, Texas. #11 Texas Tech battles TCU for Big 12 championship contention (TTU 31 - 24 TCU).',
     category: 'Sports',
     upcoming: [
-      { title: 'ACC Football Post-Game Live: Highlights & Press Conference', desc: 'Coach interviews, top defensive plays, and ACC championship race breakdown.', category: 'Sports', durationMin: 60 },
-      { title: 'ACC College Football Saturday: Miami Hurricanes vs North Carolina', desc: 'Coastal division rivalry matchup live from Kenan Memorial Stadium.', category: 'Sports', durationMin: 180 },
-      { title: 'Raycom Sports: ACC Football Highlights & Top 10 Plays', desc: 'Weekly highlight recap of the best touchdowns, sacks, and turnovers in the ACC.', category: 'Sports', durationMin: 60 },
-      { title: 'ACC Total Access: Bowl Game Projections & Power Rankings', desc: 'Expert analysis on national ranking positions and Heisman watch.', category: 'Sports', durationMin: 60 },
+      { title: 'College Football Rivalry Week Preview & Egg Bowl Countdown', desc: 'Breakdown of Black Friday and Saturday rivalry games across the nation.', category: 'Sports', durationMin: 60 },
+      { title: 'ACC College Football Saturday: Palmetto Bowl & Sunshine Showdown', desc: 'Rivalry week preview and pregame tactical analysis.', category: 'Sports', durationMin: 120 },
+      { title: 'College Football Final: Thanksgiving Thursday Scores & Highlights', desc: 'Highlights, post-game press conferences, and updated playoff rankings.', category: 'Sports', durationMin: 60 },
     ],
     past: [
-      { title: 'ACC Football Tailgate & Pre-Game Kickoff', desc: 'Pregame breakdown, marching band traditions, and injury reports.', category: 'Sports', durationMin: 60 },
-      { title: 'College Football Countdown: ACC Saturday Preview', desc: 'Keys to victory and in-depth tactical preview of today\'s showdown.', category: 'Sports', durationMin: 90 },
+      { title: 'College Football Thanksgiving Pre-Game Tailgate Live', desc: 'Live from Lubbock with game day traditions and campus reports.', category: 'Sports', durationMin: 60 },
+      { title: 'College Football Countdown: Thanksgiving Rivalry Week Kickoff', desc: 'Holiday previews and key matchup keys to victory.', category: 'Sports', durationMin: 90 },
     ]
   },
-  // 126: SportsGrid NFL Live GameDay -> Live Bills vs Chiefs In-Game Coverage & Odds
+  // 126: SportsGrid NFL Live GameDay -> Thanksgiving Night Primetime: Bills vs Chiefs
   126: {
-    liveTitle: 'NFL GameDay Live: Kansas City Chiefs vs Buffalo Bills In-Game Analysis',
-    liveDesc: 'Live real-time coverage, drive-by-drive live scores, player props, and betting analytics for the Chiefs vs Bills thriller.',
+    liveTitle: 'NFL Thanksgiving Primetime Live: Buffalo Bills vs Kansas City Chiefs',
+    liveDesc: 'Live real-time coverage from Highmark Stadium on Thanksgiving night: Josh Allen and the Bills lead Patrick Mahomes and the Chiefs (BUF 28 - 21 KC).',
     category: 'Sports',
     upcoming: [
-      { title: 'NFL Live Sunday Blitz: Detroit Lions vs Green Bay Packers', desc: 'Live in-game updates, drive charts, and live betting lines for Sunday Night Football.', category: 'Sports', durationMin: 180 },
-      { title: 'NFL GameDay Final: Sunday Wrap & Bad Beats', desc: 'Recapping every final score, spread cover, and fourth-quarter comeback.', category: 'Sports', durationMin: 60 },
-      { title: 'SportsGrid NFL Monday Morning Line: Playoff Standings', desc: 'Early lines and power rankings heading into Monday Night Football.', category: 'Sports', durationMin: 60 },
+      { title: 'NFL Thanksgiving Wrap-Up: Bears 39-35 Lions & Eagles 39-38 Cowboys', desc: 'Complete breakdown of all three Thanksgiving games: Bears 39-35 Lions, Eagles 39-38 Cowboys, Bills 28-21 Chiefs.', category: 'Sports', durationMin: 60 },
+      { title: 'Black Friday Football Countdown: Raiders vs Chiefs Preview', desc: 'Looking ahead to the Black Friday NFL broadcast and playoff picture.', category: 'Sports', durationMin: 120 },
+      { title: 'NFL Thanksgiving Final: Highmark Stadium Post-Game Press Conferences', desc: 'Live post-game reactions from Sean McDermott, Josh Allen, and Andy Reid.', category: 'Sports', durationMin: 60 },
     ],
     past: [
-      { title: 'NFL Pro Football Early Kickoff Preview', desc: 'Weather impacts, starting lineups, and closing line movement.', category: 'Sports', durationMin: 60 },
-      { title: 'Sunday Morning Football Bets & Picks', desc: 'Expert consensus picks and prop bets across today\'s NFL slate.', category: 'Sports', durationMin: 90 },
+      { title: 'NFL Thanksgiving Afternoon Classic: Philadelphia Eagles 39, Dallas Cowboys 38', desc: 'Recap of Philadelphia\'s historic 39-38 fourth-quarter comeback in Dallas.', category: 'Sports', durationMin: 180 },
+      { title: 'NFL Thanksgiving Early Classic: Chicago Bears 39, Detroit Lions 35', desc: 'Recap of Chicago\'s dramatic 39-35 Thanksgiving win in Detroit.', category: 'Sports', durationMin: 180 },
     ]
   },
   // 122: TSN 1 Sports Center -> CFL Football Live

@@ -261,19 +261,19 @@ export class StorageService {
               .map((p) => p.channelId)
           );
 
-          // Check if football is represented and ensure no outdated Prime Sports / Chiefs on Ch 108
+          // Check if Thanksgiving November 26, 2026 football schedule is represented and ensure no outdated titles
           const hasStaleCh108 = parsed.some(
-            (p) => (p.channelId.includes('108') && p.title.toLowerCase().includes('chiefs')) || p.channelId.includes('Prime.Sports.Arena')
+            (p) => (p.channelId.includes('108') && (p.title.toLowerCase().includes('chiefs') || p.title.toLowerCase().includes('clemson'))) || p.channelId.includes('Prime.Sports.Arena')
           );
           const coversFootball = parsed.some(
             (p) =>
-              p.title.toLowerCase().includes('clemson') ||
+              p.title.toLowerCase().includes('texas tech') ||
+              p.title.toLowerCase().includes('bills') ||
               p.title.toLowerCase().includes('football') ||
-              p.title.toLowerCase().includes('ncaa') ||
               p.title.toLowerCase().includes('nfl')
           );
 
-          // If at least 70% of channels have currently active programs, football is covered, and no stale 108, keep cache
+          // If at least 70% of channels have currently active programs, Thanksgiving football is covered, and no stale 108, keep cache
           if (!hasStaleCh108 && activeChannelIds.size >= Math.min(channels.length * 0.7, 10) && coversFootball) {
             return parsed;
           }
